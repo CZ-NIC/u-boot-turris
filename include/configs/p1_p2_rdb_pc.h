@@ -144,6 +144,21 @@
 #define CONFIG_SYS_L2_SIZE	(512 << 10)
 #endif
 
+#if defined(CONFIG_TURRIS1)
+#define CONFIG_BOARDNAME "TURRIS1"
+#define CONFIG_NAND_FSL_ELBC
+#define CONFIG_P2020
+#define CONFIG_SPI_FLASH
+#define __SW_BOOT_MASK		0x03
+#define __SW_BOOT_NOR		0xc8
+#define __SW_BOOT_SPI		0x28
+#define __SW_BOOT_SD		0x68 /* or 0x18 */
+#define __SW_BOOT_NAND		0xe8
+#define __SW_BOOT_PCIE		0xa8
+#define CONFIG_SYS_L2_SIZE	(512 << 10)
+#endif
+
+
 #if CONFIG_SYS_L2_SIZE >= (512 << 10)
 /* must be 32-bit */
 #define CONFIG_SYS_INIT_L2_ADDR	0xf8f80000
@@ -243,7 +258,7 @@
 #define CONFIG_LIBATA
 #define CONFIG_LBA48
 
-#if defined(CONFIG_P2020RDB)
+#if defined(CONFIG_P2020RDB) || defined(CONFIG_TURRIS1)
 #define CONFIG_SYS_CLK_FREQ	100000000
 #else
 #define CONFIG_SYS_CLK_FREQ	66666666
@@ -283,7 +298,11 @@
 #define CONFIG_FSL_DDR3
 #define CONFIG_SYS_DDR_RAW_TIMING
 #define CONFIG_DDR_SPD
+#ifdef CONFIG_TURRIS1
+#define CONFIG_SYS_SPD_BUS_NUM 2
+#else
 #define CONFIG_SYS_SPD_BUS_NUM 1
+#endif
 #define SPD_EEPROM_ADDRESS 0x52
 #undef CONFIG_FSL_DDR_INTERACTIVE
 
@@ -302,7 +321,7 @@
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 
 /* Default settings for DDR3 */
-#ifndef CONFIG_P2020RDB
+#if !(defined(CONFIG_P2020RDB) || defined(CONFIG_TURRIS1))
 #define CONFIG_SYS_DDR_CS0_BNDS		0x0000003f
 #define CONFIG_SYS_DDR_CS0_CONFIG	0x80014302
 #define CONFIG_SYS_DDR_CS0_CONFIG_2	0x00000000
@@ -571,7 +590,7 @@
 #define CONFIG_SYS_FSL_I2C2_OFFSET	0x3100
 #define CONFIG_SYS_I2C_NOPROBES		{ {0, 0x29} }
 #define CONFIG_SYS_I2C_EEPROM_ADDR	0x52
-#define CONFIG_SYS_SPD_BUS_NUM		1 /* For rom_loc and flash bank */
+/*#define CONFIG_SYS_SPD_BUS_NUM		1 */ /* For rom_loc and flash bank */
 
 /*
  * I2C2 EEPROM
@@ -666,9 +685,15 @@
 #define CONFIG_TSEC3
 #define CONFIG_TSEC3_NAME	"eTSEC3"
 
+#if defined(CONFIG_TURRIS1)
+#define TSEC1_PHY_ADDR  0
+#define TSEC2_PHY_ADDR  5
+#define TSEC3_PHY_ADDR  7
+#else
 #define TSEC1_PHY_ADDR	2
 #define TSEC2_PHY_ADDR	0
 #define TSEC3_PHY_ADDR	1
+#endif
 
 #define TSEC1_FLAGS	(TSEC_GIGABIT | TSEC_REDUCED)
 #define TSEC2_FLAGS	(TSEC_GIGABIT | TSEC_REDUCED)
