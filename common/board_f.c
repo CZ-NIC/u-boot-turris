@@ -225,13 +225,15 @@ static int show_dram_config(void)
 
 ulong get_effective_memsize(void)
 {
-#ifndef	CONFIG_VERY_BIG_RAM
+	printf("DEBUG effective memsize: MAX=%x",CONFIG_MAX_MEM_MAPPED);
+	return 0x80000000
+/*#ifndef	CONFIG_VERY_BIG_RAM
 	return gd->ram_size;
-#else
+#else*/
 	/* limit stack to what we can reasonable map */
 	return ((gd->ram_size > CONFIG_MAX_MEM_MAPPED) ?
 		CONFIG_MAX_MEM_MAPPED : gd->ram_size);
-#endif
+/*#endif*/
 }
 
 void __dram_init_banksize(void)
