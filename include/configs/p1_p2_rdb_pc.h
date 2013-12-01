@@ -441,6 +441,8 @@
 #define CONFIG_CMD_NAND
 #if defined(CONFIG_P1020RDB_PD)
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(128 * 1024)
+#elif defined(CONFIG_TURRIS1)
+#define CONFIG_SYS_NAND_BLOCK_SIZE      (128 * 1024)
 #else
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(16 * 1024)
 #endif
@@ -450,7 +452,7 @@
 	| BR_PS_8	/* Port Size = 8 bit */ \
 	| BR_MS_FCM	/* MSEL = FCM */ \
 	| BR_V)	/* valid */
-#if defined(CONFIG_P1020RDB_PD)
+#if defined(CONFIG_P1020RDB_PD) || defined(CONFIG_TURRIS1)
 #define CONFIG_SYS_NAND_OR_PRELIM	(OR_AM_32KB \
 	| OR_FCM_PGS	/* Large Page*/ \
 	| OR_FCM_CSCT \
