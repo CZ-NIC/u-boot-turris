@@ -716,7 +716,11 @@
 #define TSEC2_PHYIDX	0
 #define TSEC3_PHYIDX	0
 
-#define CONFIG_ETHPRIME	"eTSEC1"
+#if defined(CONFIG_TURRIS1)
+#define CONFIG_ETHPRIME	"eTSEC3"
+#else
+#define CONFIG_ETHPRIME "eTSEC1"
+#endif
 
 #define CONFIG_PHY_GIGE	1	/* Include GbE speed/duplex detection */
 
@@ -959,7 +963,9 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 "bootargsnand=root=/dev/mtdblock8 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "norboot=setenv bootargs $bootargsnor; bootm 0xef020000 - 0xef000000\0" \
-"nandboot=setenv bootargs $bootargsnand; nand read 0x400000 0x0 0x00100000; nboot 0x200000 0 0x00200000; bootm 0x200000 - 0x400000\0"
+"nandboot=setenv bootargs $bootargsnand; nand read 0x400000 0x0 0x00100000; nboot 0x200000 0 0x00200000; bootm 0x200000 - 0x400000\0" \
+"reflash_timeout=10\0"
+#define CONFIG_TURRIS_BOOT "setexpr.b reflash *0xFFA0001F; if test $reflash -ge $reflash_timeout; then echo BOOT NOR; run norboot; else echo BOOT NAND; run nandboot; fi"
 #else
 #define	CONFIG_EXTRA_ENV_SETTINGS	\
 "netdev=eth0\0"	\
@@ -1045,6 +1051,10 @@ __stringify(__PCIE_RST_CMD)"\0"
 "tftp $fdtaddr $fdtfile;"	\
 "bootm $loadaddr $ramdiskaddr $fdtaddr"
 
-#define CONFIG_BOOTCOMMAND	CONFIG_HDBOOT
+#ifdef CONFIG_TURRIS1
+#define CONFIG_BOOTCOMMAND	CONFIG_TURRIS_BOOT
+#else
+#define CONFIG_BOOTCOMMAND      CONFIG_HDBOOT
+#endif
 
 #endif /* __CONFIG_H */
