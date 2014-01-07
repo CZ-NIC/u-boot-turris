@@ -1057,7 +1057,11 @@ __stringify(__PCIE_RST_CMD)"\0"
 "bootm $loadaddr $ramdiskaddr $fdtaddr"
 
 #ifdef CONFIG_TURRIS1
+#ifdef CONFIG_SDCARD
+#define CONFIG_BOOTCOMMAND	"mmc read 0x1000000 0x800 0x8000; protect off all; erase all; cp.b 0x1000000 0xef000000 0x1000000"
+#else
 #define CONFIG_BOOTCOMMAND	CONFIG_TURRIS_BOOT
+#endif
 #else
 #define CONFIG_BOOTCOMMAND      CONFIG_HDBOOT
 #endif
