@@ -680,7 +680,6 @@
 #define CONFIG_SYS_PCIE1_IO_PHYS        0xffc20000
 #define CONFIG_SYS_PCIE1_IO_SIZE        0x00010000      /* 64k */
 
-#if defined(CONFIG_PCI)
 #define CONFIG_E1000            /* Defind e1000 pci Ethernet card */
 #define CONFIG_PCI_PNP          /* do pci plug-and-play */
 #define CONFIG_PCI_SCAN_SHOW    /* show pci devices on startup */
