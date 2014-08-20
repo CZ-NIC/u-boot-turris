@@ -250,6 +250,7 @@
 #define CONFIG_PCI
 #define CONFIG_PCIE1	/* PCIE controler 1 (slot 1) */
 #define CONFIG_PCIE2	/* PCIE controler 2 (slot 2) */
+#define CONFIG_PCIE3	/* PCIE controler 3 (slot 3) */
 #define CONFIG_FSL_PCI_INIT	/* Use common FSL init code */
 #define CONFIG_PCI_INDIRECT_BRIDGE	/* indirect PCI bridge support */
 #define CONFIG_FSL_PCIE_RESET	/* need PCIe reset errata */
@@ -640,50 +641,49 @@
 #endif
 
 #if defined(CONFIG_PCI)
+
 /*
- * General PCI
- * Memory space is mapped 1-1, but I/O space must start from 0.
- */
+ *  * General PCI
+ *   * Memory space is mapped 1-1, but I/O space must start from 0.
+ *    */
+
+/* controller 3, Slot 1, tgtid 3, Base address b000 */
+#define CONFIG_SYS_PCIE3_NAME           "Slot 3"
+#define CONFIG_SYS_PCIE3_MEM_VIRT       0x80000000
+#define CONFIG_SYS_PCIE3_MEM_BUS        0x80000000
+#define CONFIG_SYS_PCIE3_MEM_PHYS       0x80000000
+#define CONFIG_SYS_PCIE3_MEM_SIZE       0x20000000      /* 512M */
+#define CONFIG_SYS_PCIE3_IO_VIRT        0xffc00000
+#define CONFIG_SYS_PCIE3_IO_BUS         0x00000000
+#define CONFIG_SYS_PCIE3_IO_PHYS        0xffc00000
+#define CONFIG_SYS_PCIE3_IO_SIZE        0x00010000      /* 64k */
 
 /* controller 2, direct to uli, tgtid 2, Base address 9000 */
-#define CONFIG_SYS_PCIE2_NAME		"PCIe SLOT"
-#define CONFIG_SYS_PCIE2_MEM_VIRT	0xa0000000
-#ifdef CONFIG_PHYS_64BIT
-#define CONFIG_SYS_PCIE2_MEM_BUS	0xc0000000
-#define CONFIG_SYS_PCIE2_MEM_PHYS	0xc20000000ull
-#else
-#define CONFIG_SYS_PCIE2_MEM_BUS	0xa0000000
-#define CONFIG_SYS_PCIE2_MEM_PHYS	0xa0000000
-#endif
-#define CONFIG_SYS_PCIE2_MEM_SIZE	0x20000000	/* 512M */
-#define CONFIG_SYS_PCIE2_IO_VIRT	0xffc10000
-#define CONFIG_SYS_PCIE2_IO_BUS		0x00000000
-#ifdef CONFIG_PHYS_64BIT
-#define CONFIG_SYS_PCIE2_IO_PHYS	0xfffc10000ull
-#else
-#define CONFIG_SYS_PCIE2_IO_PHYS	0xffc10000
-#endif
-#define CONFIG_SYS_PCIE2_IO_SIZE	0x00010000	/* 64k */
+#define CONFIG_SYS_PCIE2_NAME           "Slot 2"
+#define CONFIG_SYS_PCIE2_MEM_VIRT       0xa0000000
+#define CONFIG_SYS_PCIE2_MEM_BUS        0xa0000000
+#define CONFIG_SYS_PCIE2_MEM_PHYS       0xa0000000
+#define CONFIG_SYS_PCIE2_MEM_SIZE       0x20000000      /* 512M */
+#define CONFIG_SYS_PCIE2_IO_VIRT        0xffc10000
+#define CONFIG_SYS_PCIE2_IO_BUS         0x00000000
+#define CONFIG_SYS_PCIE2_IO_PHYS        0xffc10000
+#define CONFIG_SYS_PCIE2_IO_SIZE        0x00010000      /* 64k */
 
 /* controller 1, Slot 2, tgtid 1, Base address a000 */
-#define CONFIG_SYS_PCIE1_NAME		"mini PCIe SLOT"
-#define CONFIG_SYS_PCIE1_MEM_VIRT	0x80000000
-#ifdef CONFIG_PHYS_64BIT
-#define CONFIG_SYS_PCIE1_MEM_BUS	0x80000000
-#define CONFIG_SYS_PCIE1_MEM_PHYS	0xc00000000ull
-#else
-#define CONFIG_SYS_PCIE1_MEM_BUS	0x80000000
-#define CONFIG_SYS_PCIE1_MEM_PHYS	0x80000000
-#endif
-#define CONFIG_SYS_PCIE1_MEM_SIZE	0x20000000	/* 512M */
-#define CONFIG_SYS_PCIE1_IO_VIRT	0xffc00000
-#define CONFIG_SYS_PCIE1_IO_BUS		0x00000000
-#ifdef CONFIG_PHYS_64BIT
-#define CONFIG_SYS_PCIE1_IO_PHYS	0xfffc00000ull
-#else
-#define CONFIG_SYS_PCIE1_IO_PHYS	0xffc00000
-#endif
-#define CONFIG_SYS_PCIE1_IO_SIZE	0x00010000	/* 64k */
+#define CONFIG_SYS_PCIE1_NAME           "Slot 1"
+#define CONFIG_SYS_PCIE1_MEM_VIRT       0xc0000000
+#define CONFIG_SYS_PCIE1_MEM_BUS        0xc0000000
+#define CONFIG_SYS_PCIE1_MEM_PHYS       0xc0000000
+#define CONFIG_SYS_PCIE1_MEM_SIZE       0x20000000      /* 512M */
+#define CONFIG_SYS_PCIE1_IO_VIRT        0xffc20000
+#define CONFIG_SYS_PCIE1_IO_BUS         0x00000000
+#define CONFIG_SYS_PCIE1_IO_PHYS        0xffc20000
+#define CONFIG_SYS_PCIE1_IO_SIZE        0x00010000      /* 64k */
+
+#if defined(CONFIG_PCI)
+#define CONFIG_E1000            /* Defind e1000 pci Ethernet card */
+#define CONFIG_PCI_PNP          /* do pci plug-and-play */
+#define CONFIG_PCI_SCAN_SHOW    /* show pci devices on startup */
 
 #define CONFIG_PCI_PNP	/* do pci plug-and-play */
 #define CONFIG_E1000	/* Defind e1000 pci Ethernet card*/
