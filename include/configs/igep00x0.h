@@ -4,7 +4,7 @@
  * (C) Copyright 2012
  * ISEE 2007 SL, <www.iseebcn.com>
  *
- * SPDX-License-Identifier:	GPL-2.0+ 
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __IGEP00X0_H
@@ -45,6 +45,7 @@
 
 #define CONFIG_OF_LIBFDT
 #define CONFIG_CMD_BOOTZ
+#define CONFIG_SUPPORT_RAW_INITRD
 
 /*
  * NS16550 Configuration

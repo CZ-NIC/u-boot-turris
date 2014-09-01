@@ -38,6 +38,16 @@
 #define AM335X				0xB944
 #define TI81XX				0xB81E
 #define DEVICE_ID			(CTRL_BASE + 0x0600)
+#define DEVICE_ID_MASK			0x1FFF
+
+/* MPU max frequencies */
+#define AM335X_ZCZ_300			0x1FEF
+#define AM335X_ZCZ_600			0x1FAF
+#define AM335X_ZCZ_720			0x1F2F
+#define AM335X_ZCZ_800			0x1E2F
+#define AM335X_ZCZ_1000			0x1C2F
+#define AM335X_ZCE_300			0x1FDF
+#define AM335X_ZCE_600			0x1F9F
 
 /* This gives the status of the boot mode pins on the evm */
 #define SYSBOOT_MASK			(BIT(0) | BIT(1) | BIT(2)\
@@ -45,6 +55,26 @@
 
 #define PRM_RSTCTRL_RESET		0x01
 #define PRM_RSTST_WARM_RESET_MASK	0x232
+
+/*
+ * Watchdog:
+ * Using the prescaler, the OMAP watchdog could go for many
+ * months before firing.  These limits work without scaling,
+ * with the 60 second default assumed by most tools and docs.
+ */
+#define TIMER_MARGIN_MAX	(24 * 60 * 60)	/* 1 day */
+#define TIMER_MARGIN_DEFAULT	60	/* 60 secs */
+#define TIMER_MARGIN_MIN	1
+
+#define PTV			0	/* prescale */
+#define GET_WLDR_VAL(secs)	(0xffffffff - ((secs) * (32768/(1<<PTV))) + 1)
+#define WDT_WWPS_PEND_WCLR	BIT(0)
+#define WDT_WWPS_PEND_WLDR	BIT(2)
+#define WDT_WWPS_PEND_WTGR	BIT(3)
+#define WDT_WWPS_PEND_WSPR	BIT(4)
+
+#define WDT_WCLR_PRE		BIT(5)
+#define WDT_WCLR_PTV_OFF	2
 
 #ifndef __KERNEL_STRICT_NAMES
 #ifndef __ASSEMBLY__
@@ -193,7 +223,8 @@ struct cm_perpll {
 	unsigned int dcan1clkctrl;	/* offset 0xC4 */
 	unsigned int resv6[2];
 	unsigned int emiffwclkctrl;	/* offset 0xD0 */
-	unsigned int resv7[2];
+	unsigned int epwmss0clkctrl;	/* offset 0xD4 */
+	unsigned int epwmss2clkctrl;	/* offset 0xD8 */
 	unsigned int l3instrclkctrl;	/* offset 0xDC */
 	unsigned int l3clkctrl;		/* Offset 0xE0 */
 	unsigned int resv8[4];
@@ -204,6 +235,7 @@ struct cm_perpll {
 	unsigned int l4hsclkctrl;	/* offset 0x120 */
 	unsigned int resv10[8];
 	unsigned int cpswclkstctrl;	/* offset 0x144 */
+	unsigned int lcdcclkstctrl;	/* offset 0x148 */
 };
 #else
 /* Encapsulating core pll registers */
@@ -366,6 +398,8 @@ struct cm_perpll {
 struct cm_dpll {
 	unsigned int resv1[2];
 	unsigned int clktimer2clk;	/* offset 0x08 */
+	unsigned int resv2[10];
+	unsigned int clklcdcpixelclk;	/* offset 0x34 */
 };
 
 /* Control Module RTC registers */
@@ -485,7 +519,57 @@ struct ctrl_dev {
 	unsigned int macid1h;		/* offset 0x3c */
 	unsigned int resv4[4];
 	unsigned int miisel;		/* offset 0x50 */
+	unsigned int resv5[106];
+	unsigned int efuse_sma;		/* offset 0x1FC */
 };
+
+/* gmii_sel register defines */
+#define GMII1_SEL_MII		0x0
+#define GMII1_SEL_RMII		0x1
+#define GMII1_SEL_RGMII		0x2
+#define GMII2_SEL_MII		0x0
+#define GMII2_SEL_RMII		0x4
+#define GMII2_SEL_RGMII		0x8
+#define RGMII1_IDMODE		BIT(4)
+#define RGMII2_IDMODE		BIT(5)
+#define RMII1_IO_CLK_EN		BIT(6)
+#define RMII2_IO_CLK_EN		BIT(7)
+
+#define MII_MODE_ENABLE		(GMII1_SEL_MII | GMII2_SEL_MII)
+#define RMII_MODE_ENABLE        (GMII1_SEL_RMII | GMII2_SEL_RMII)
+#define RGMII_MODE_ENABLE	(GMII1_SEL_RGMII | GMII2_SEL_RGMII)
+#define RGMII_INT_DELAY		(RGMII1_IDMODE | RGMII2_IDMODE)
+#define RMII_CHIPCKL_ENABLE     (RMII1_IO_CLK_EN | RMII2_IO_CLK_EN)
+
+/* PWMSS */
+struct pwmss_regs {
+	unsigned int idver;
+	unsigned int sysconfig;
+	unsigned int clkconfig;
+	unsigned int clkstatus;
+};
+#define ECAP_CLK_EN		BIT(0)
+#define ECAP_CLK_STOP_REQ	BIT(1)
+
+struct pwmss_ecap_regs {
+	unsigned int tsctr;
+	unsigned int ctrphs;
+	unsigned int cap1;
+	unsigned int cap2;
+	unsigned int cap3;
+	unsigned int cap4;
+	unsigned int resv1[4];
+	unsigned short ecctl1;
+	unsigned short ecctl2;
+};
+
+/* Capture Control register 2 */
+#define ECTRL2_SYNCOSEL_MASK	(0x03 << 6)
+#define ECTRL2_MDSL_ECAP	BIT(9)
+#define ECTRL2_CTRSTP_FREERUN	BIT(4)
+#define ECTRL2_PLSL_LOW		BIT(10)
+#define ECTRL2_SYNC_EN		BIT(5)
+
 #endif /* __ASSEMBLY__ */
 #endif /* __KERNEL_STRICT_NAMES */
 

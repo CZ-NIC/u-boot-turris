@@ -31,8 +31,6 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 /* MII mode defines */
-#define MII_MODE_ENABLE		0x0
-#define RGMII_MODE_ENABLE	0xA
 #define RMII_RGMII2_MODE_ENABLE	0x49
 
 static struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
@@ -152,6 +150,7 @@ static struct cpsw_platform_data cpsw_data = {
 	.ale_entries		= 1024,
 	.host_port_reg_ofs	= 0x108,
 	.hw_stats_reg_ofs	= 0x900,
+	.bd_ram_ofs		= 0x2000,
 	.mac_control		= (1 << 5),
 	.control		= cpsw_control,
 	.host_port_num		= 0,

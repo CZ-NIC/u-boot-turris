@@ -31,13 +31,13 @@ COBJS-$(CONFIG_PL011_SERIAL) += serial_pl01x.o
 COBJS-$(CONFIG_PXA_SERIAL) += serial_pxa.o
 COBJS-$(CONFIG_SA1100_SERIAL) += serial_sa1100.o
 COBJS-$(CONFIG_S3C24X0_SERIAL) += serial_s3c24x0.o
-COBJS-$(CONFIG_S3C44B0_SERIAL) += serial_s3c44b0.o
 COBJS-$(CONFIG_XILINX_UARTLITE) += serial_xuartlite.o
 COBJS-$(CONFIG_SANDBOX_SERIAL) += sandbox.o
 COBJS-$(CONFIG_SCIF_CONSOLE) += serial_sh.o
 COBJS-$(CONFIG_ZYNQ_SERIAL) += serial_zynq.o
 COBJS-$(CONFIG_BFIN_SERIAL) += serial_bfin.o
 COBJS-$(CONFIG_FSL_LPUART) += serial_lpuart.o
+COBJS-$(CONFIG_MXS_AUART) += mxs_auart.o
 
 ifndef CONFIG_SPL_BUILD
 COBJS-$(CONFIG_USB_TTY) += usbtty.o

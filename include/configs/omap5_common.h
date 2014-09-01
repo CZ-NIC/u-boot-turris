@@ -8,7 +8,7 @@
  *
  * TI OMAP5 AND DRA7XX common configuration settings
  *
- * SPDX-License-Identifier:	GPL-2.0+ 
+ * SPDX-License-Identifier:	GPL-2.0+
  *
  * For more details, please see the technical documents listed at
  * http://www.ti.com/product/omap5432
@@ -28,9 +28,12 @@
 /* Use General purpose timer 1 */
 #define CONFIG_SYS_TIMERBASE		GPT2_BASE
 
+/*
+ * For the DDR timing information we can either dynamically determine
+ * the timings to use or use pre-determined timings (based on using the
+ * dynamic method.  Default to the static timing infomation.
+ */
 #define CONFIG_SYS_EMIF_PRECALCULATED_TIMING_REGS
-
-/* Defines for SDRAM init */
 #ifndef CONFIG_SYS_EMIF_PRECALCULATED_TIMING_REGS
 #define CONFIG_SYS_AUTOMATIC_SDRAM_DETECTION
 #define CONFIG_SYS_DEFAULT_LPDDR2_TIMINGS
@@ -80,7 +83,7 @@
 	"partitions=" PARTS_DEFAULT "\0" \
 	"optargs=\0" \
 	"mmcdev=0\0" \
-	"mmcroot=/dev/mmcblk0p2 rw\0" \
+	"mmcroot=/dev/mmcblk1p2 rw\0" \
 	"mmcrootfstype=ext4 rootwait\0" \
 	"mmcargs=setenv bootargs console=${console} " \
 		"${optargs} " \
@@ -94,9 +97,24 @@
 	"importbootenv=echo Importing environment from mmc${mmcdev} ...; " \
 		"env import -t ${loadaddr} ${filesize}\0" \
 	"loadimage=load mmc ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"mmcboot=echo Booting from mmc${mmcdev} ...; " \
-		"run mmcargs; " \
-		"bootz ${loadaddr} - ${fdtaddr}\0" \
+	"mmcboot=mmc dev ${mmcdev}; " \
+		"if mmc rescan; then " \
+			"echo SD/MMC found on device ${mmcdev};" \
+			"if run loadbootenv; then " \
+				"echo Loaded environment from ${bootenv};" \
+				"run importbootenv;" \
+			"fi;" \
+			"if test -n $uenvcmd; then " \
+				"echo Running uenvcmd ...;" \
+				"run uenvcmd;" \
+			"fi;" \
+			"if run loadimage; then " \
+				"run loadfdt; " \
+				"echo Booting from mmc${mmcdev} ...; " \
+				"run mmcargs; " \
+				"bootz ${loadaddr} - ${fdtaddr}; " \
+			"fi;" \
+		"fi;\0" \
 	"findfdt="\
 		"if test $board_name = omap5_uevm; then " \
 			"setenv fdtfile omap5-uevm.dtb; fi; " \
@@ -108,28 +126,22 @@
 
 #define CONFIG_BOOTCOMMAND \
 	"run findfdt; " \
-	"mmc dev ${mmcdev}; if mmc rescan; then " \
-		"if run loadbootscript; then " \
-			"run bootscript; " \
-		"else " \
-			"if run loadbootenv; then " \
-				"run importbootenv; " \
-			"fi;" \
-			"if test -n ${uenvcmd}; then " \
-				"echo Running uenvcmd ...;" \
-				"run uenvcmd;" \
-			"fi;" \
-		"fi;" \
-		"if run loadimage; then " \
-			"run loadfdt; " \
-			"run mmcboot; " \
-		"fi; " \
-	"fi"
+	"run mmcboot;" \
+	"setenv mmcdev 1; " \
+	"setenv bootpart 1:2; " \
+	"setenv mmcroot /dev/mmcblk0p2 rw; " \
+	"run mmcboot;" \
 
 
-/* Defines for SPL */
-#define CONFIG_SPL_TEXT_BASE		0x40300350
-#define CONFIG_SPL_MAX_SIZE		0x19000	/* 100K */
+/*
+ * SPL related defines.  The Public RAM memory map the ROM defines the
+ * area between 0x40300000 and 0x4031E000 as a download area for OMAP5
+ * (dra7xx is larger, but we do not need to be larger at this time).  We
+ * set CONFIG_SPL_DISPLAY_PRINT to have omap_rev_string() called and
+ * print some information.
+ */
+#define CONFIG_SPL_TEXT_BASE		0x40300000
+#define CONFIG_SPL_MAX_SIZE		(0x4031E000 - CONFIG_SPL_TEXT_BASE)
 #define CONFIG_SPL_DISPLAY_PRINT
 #define CONFIG_SPL_LDSCRIPT "$(CPUDIR)/omap-common/u-boot-spl.lds"
 
