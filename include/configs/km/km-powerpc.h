@@ -17,6 +17,9 @@
 #define CONFIG_CMD_DTT
 #define CONFIG_JFFS2_CMDLINE
 
+/* standard km ethernet_present for piggy */
+#define CONFIG_KM_COMMON_ETH_INIT
+
 /* EEprom support 24C08, 24C16, 24C64 */
 #define CONFIG_SYS_I2C_MULTI_EEPROMS
 #define CONFIG_SYS_EEPROM_PAGE_WRITE_ENABLE
@@ -31,6 +34,9 @@
 #define CONFIG_SYS_MEMTEST_END	0x00f00000	/* 1 ... 15 MB in DRAM	*/
 
 #define CONFIG_SYS_LOAD_ADDR	0x100000	/* default load address */
+
+/* Reserve 4 MB for malloc */
+#define CONFIG_SYS_MALLOC_LEN		(4 * 1024 * 1024)
 
 /******************************************************************************
  * (PRAM usage)
@@ -64,11 +70,6 @@
 #define CONFIG_KM_DEF_BOOT_ARGS_CPU		""
 
 #define CONFIG_KM_DEF_ENV_CPU						\
-	"boot=bootm ${load_addr_r} - ${fdt_addr_r}\0"			\
-	"cramfsloadfdt="						\
-		"cramfsload ${fdt_addr_r} "				\
-		"fdt_0x${IVM_BoardId}_0x${IVM_HWKey}.dtb\0"		\
-	"fdt_addr_r=" __stringify(CONFIG_KM_FDT_ADDR) "\0"		\
 	"u-boot="__stringify(CONFIG_HOSTNAME) "/u-boot.bin\0"		\
 	"update="							\
 		"protect off " __stringify(BOOTFLASH_START) " +${filesize} && "\
@@ -76,6 +77,7 @@
 		"cp.b ${load_addr_r} " __stringify(BOOTFLASH_START)	\
 		"  ${filesize} && "					\
 		"protect on " __stringify(BOOTFLASH_START) "  +${filesize}\0"\
+	"set_fdthigh=true\0"						\
 	""
 
 #endif /* __CONFIG_KEYMILE_POWERPC_H */

@@ -45,10 +45,9 @@
 /*
  * Hardware drivers
  */
-#define CONFIG_HARD_I2C
-#define CONFIG_I2C_MXC
-#define CONFIG_SYS_I2C_BASE		I2C1_BASE_ADDR
-#define CONFIG_SYS_I2C_SPEED		100000
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_I2C_MXC
+#define CONFIG_SYS_SPD_BUS_NUM		0
 #define CONFIG_MXC_SPI
 #define CONFIG_MXC_GPIO
 
@@ -56,7 +55,7 @@
 #define CONFIG_POWER
 #define CONFIG_POWER_I2C
 #define CONFIG_POWER_FSL
-#define CONFIG_PMIC_FSL_MC13892
+#define CONFIG_POWER_FSL_MC13892
 #define CONFIG_SYS_FSL_PMIC_I2C_ADDR	0x8
 #define CONFIG_RTC_MC13XXX
 
@@ -151,9 +150,6 @@
 #undef	CONFIG_SYS_CLKS_IN_HZ	/* everything, incl board info, in Hz */
 
 #define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
-
-#define CONFIG_SYS_HZ				1000
-
 
 /*
  * Stack sizes

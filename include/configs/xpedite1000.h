@@ -18,7 +18,6 @@
 #define CONFIG_XPEDITE1000	1
 #define CONFIG_SYS_BOARD_NAME	"XPedite1000"
 #define CONFIG_SYS_FORM_PMC	1
-#define CONFIG_4xx		1		/* ... PPC4xx family */
 #define CONFIG_440		1
 #define CONFIG_440GX		1		/* 440 GX */
 #define CONFIG_BOARD_EARLY_INIT_F 1		/* Call board_pre_init	*/
@@ -209,12 +208,10 @@ extern void out32(unsigned int, unsigned long);
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory */
 #define CONFIG_SYS_LOAD_ADDR	0x100000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE	256		/* Console I/O Buffer Size */
 #define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16) /* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16		/* max number of command args */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE	/* Boot Argument Buffer Size */
-#define CONFIG_SYS_HZ		1000		/* decrementer freq: 1 ms ticks */
 #define CONFIG_CMDLINE_EDITING	1		/* Command-line editing */
 #define CONFIG_BOOTDELAY	3		/* -1 disables auto-boot */
 #define CONFIG_PANIC_HANG			/* do not reset board on panic */

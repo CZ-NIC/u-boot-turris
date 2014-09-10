@@ -132,6 +132,10 @@ Directory Hierarchy:
 ====================
 
 /arch			Architecture specific files
+  /arc			Files generic to ARC architecture
+    /cpu		CPU specific files
+      /arc700		Files specific to ARC 700 CPUs
+    /lib		Architecture specific library files
   /arm			Files generic to ARM architecture
     /cpu		CPU specific files
       /arm720t		Files specific to ARM 720 CPUs
@@ -141,7 +145,6 @@ Directory Hierarchy:
 	/s3c24x0	Files specific to Samsung S3C24X0 CPUs
       /arm926ejs	Files specific to ARM 926 CPUs
       /arm1136		Files specific to ARM 1136 CPUs
-      /ixp		Files specific to Intel XScale IXP CPUs
       /pxa		Files specific to Intel XScale PXA CPUs
       /sa1100		Files specific to Intel StrongARM SA1100 CPUs
     /lib		Architecture specific library files
@@ -165,7 +168,7 @@ Directory Hierarchy:
   /mips			Files generic to MIPS architecture
     /cpu		CPU specific files
       /mips32		Files specific to MIPS32 CPUs
-      /xburst		Files specific to Ingenic XBurst CPUs
+      /mips64		Files specific to MIPS64 CPUs
     /lib		Architecture specific library files
   /nds32		Files generic to NDS32 architecture
     /cpu		CPU specific files
@@ -261,6 +264,17 @@ e.g. "make cogent_mpc8xx_config". And also configure the cogent
 directory according to the instructions in cogent/README.
 
 
+Sandbox Environment:
+--------------------
+
+U-Boot can be built natively to run on a Linux host using the 'sandbox'
+board. This allows feature development which is not board- or architecture-
+specific to be undertaken on a native platform. The sandbox is also used to
+run some of U-Boot's tests.
+
+See board/sandbox/sandbox/README.sandbox for more details.
+
+
 Configuration Options:
 ----------------------
 
@@ -306,14 +320,6 @@ The following options need to be configured:
 		CONFIG_LCD_HEARTBEAT	- update a character position on
 					  the LCD display every second with
 					  a "rotator" |\-/|\-/
-
-- Board flavour: (if CONFIG_MPC8260ADS is defined)
-		CONFIG_ADSTYPE
-		Possible values are:
-			CONFIG_SYS_8260ADS	- original MPC8260ADS
-			CONFIG_SYS_8266ADS	- MPC8266ADS
-			CONFIG_SYS_PQ2FADS	- PQ2FADS-ZU or PQ2FADS-VR
-			CONFIG_SYS_8272ADS	- MPC8272ADS
 
 - Marvell Family Member
 		CONFIG_SYS_MVFS		- define it if you want to enable
@@ -423,15 +429,114 @@ The following options need to be configured:
 		CONFIG_SYS_FSL_DSP_CCSRBAR_DEFAULT
 		This value denotes start offset of DSP CCSR space.
 
-		CONFIG_SYS_FSL_DDR_EMU
-		Specify emulator support for DDR. Some DDR features such as
-		deskew training are not available.
+		CONFIG_SYS_FSL_SINGLE_SOURCE_CLK
+		Single Source Clock is clocking mode present in some of FSL SoC's.
+		In this mode, a single differential clock is used to supply
+		clocks to the sysclock, ddrclock and usbclock.
+
+		CONFIG_SYS_CPC_REINIT_F
+		This CONFIG is defined when the CPC is configured as SRAM at the
+		time of U-boot entry and is required to be re-initialized.
+
+		CONFIG_DEEP_SLEEP
+		Inidcates this SoC supports deep sleep feature. If deep sleep is
+		supported, core will start to execute uboot when wakes up.
 
 - Generic CPU options:
+		CONFIG_SYS_GENERIC_GLOBAL_DATA
+		Defines global data is initialized in generic board board_init_f().
+		If this macro is defined, global data is created and cleared in
+		generic board board_init_f(). Without this macro, architecture/board
+		should initialize global data before calling board_init_f().
+
 		CONFIG_SYS_BIG_ENDIAN, CONFIG_SYS_LITTLE_ENDIAN
 
 		Defines the endianess of the CPU. Implementation of those
 		values is arch specific.
+
+		CONFIG_SYS_FSL_DDR
+		Freescale DDR driver in use. This type of DDR controller is
+		found in mpc83xx, mpc85xx, mpc86xx as well as some ARM core
+		SoCs.
+
+		CONFIG_SYS_FSL_DDR_ADDR
+		Freescale DDR memory-mapped register base.
+
+		CONFIG_SYS_FSL_DDR_EMU
+		Specify emulator support for DDR. Some DDR features such as
+		deskew training are not available.
+
+		CONFIG_SYS_FSL_DDRC_GEN1
+		Freescale DDR1 controller.
+
+		CONFIG_SYS_FSL_DDRC_GEN2
+		Freescale DDR2 controller.
+
+		CONFIG_SYS_FSL_DDRC_GEN3
+		Freescale DDR3 controller.
+
+		CONFIG_SYS_FSL_DDRC_GEN4
+		Freescale DDR4 controller.
+
+		CONFIG_SYS_FSL_DDRC_ARM_GEN3
+		Freescale DDR3 controller for ARM-based SoCs.
+
+		CONFIG_SYS_FSL_DDR1
+		Board config to use DDR1. It can be enabled for SoCs with
+		Freescale DDR1 or DDR2 controllers, depending on the board
+		implemetation.
+
+		CONFIG_SYS_FSL_DDR2
+		Board config to use DDR2. It can be eanbeld for SoCs with
+		Freescale DDR2 or DDR3 controllers, depending on the board
+		implementation.
+
+		CONFIG_SYS_FSL_DDR3
+		Board config to use DDR3. It can be enabled for SoCs with
+		Freescale DDR3 or DDR3L controllers.
+
+		CONFIG_SYS_FSL_DDR3L
+		Board config to use DDR3L. It can be enabled for SoCs with
+		DDR3L controllers.
+
+		CONFIG_SYS_FSL_DDR4
+		Board config to use DDR4. It can be enabled for SoCs with
+		DDR4 controllers.
+
+		CONFIG_SYS_FSL_IFC_BE
+		Defines the IFC controller register space as Big Endian
+
+		CONFIG_SYS_FSL_IFC_LE
+		Defines the IFC controller register space as Little Endian
+
+		CONFIG_SYS_FSL_PBL_PBI
+		It enables addition of RCW (Power on reset configuration) in built image.
+		Please refer doc/README.pblimage for more details
+
+		CONFIG_SYS_FSL_PBL_RCW
+		It adds PBI(pre-boot instructions) commands in u-boot build image.
+		PBI commands can be used to configure SoC before it starts the execution.
+		Please refer doc/README.pblimage for more details
+
+		CONFIG_SPL_FSL_PBL
+		It adds a target to create boot binary having SPL binary in PBI format
+		concatenated with u-boot binary.
+
+		CONFIG_SYS_FSL_DDR_BE
+		Defines the DDR controller register space as Big Endian
+
+		CONFIG_SYS_FSL_DDR_LE
+		Defines the DDR controller register space as Little Endian
+
+		CONFIG_SYS_FSL_DDR_SDRAM_BASE_PHY
+		Physical address from the view of DDR controllers. It is the
+		same as CONFIG_SYS_DDR_SDRAM_BASE for  all Power SoCs. But
+		it could be different for ARM SoCs.
+
+		CONFIG_SYS_FSL_DDR_INTLV_256B
+		DDR controller interleaving on 256-byte. This is a special
+		interleaving mode, handled by Dickens for Freescale layerscape
+		SoCs with ARM core.
 
 - Intel Monahans options:
 		CONFIG_SYS_MONAHANS_RUN_MODE_OSC_RATIO
@@ -497,6 +602,8 @@ The following options need to be configured:
 		CONFIG_ARM_ERRATA_742230
 		CONFIG_ARM_ERRATA_743622
 		CONFIG_ARM_ERRATA_751472
+		CONFIG_ARM_ERRATA_794072
+		CONFIG_ARM_ERRATA_761320
 
 		If set, the workarounds for these ARM errata are applied early
 		during U-Boot startup. Note that these options force the
@@ -642,6 +749,10 @@ The following options need to be configured:
 		boot loader that has already initialized the UART.  Define this
 		variable to flush the UART at init time.
 
+		CONFIG_SERIAL_HW_FLOW_CONTROL
+
+		Define this variable to enable hw flow control in serial driver.
+		Current user of this option is drivers/serial/nsl16550.c driver
 
 - Console Interface:
 		Depending on board, define exactly one serial port
@@ -704,6 +815,11 @@ The following options need to be configured:
 		messages (by U-Boot and Linux!) can be silenced with
 		the "silent" environment variable. See
 		doc/README.silent for more information.
+
+		CONFIG_SYS_CONSOLE_BG_COL: define the backgroundcolor, default
+			is 0x00.
+		CONFIG_SYS_CONSOLE_FG_COL: define the foregroundcolor, default
+			is 0xa0.
 
 - Console Baudrate:
 		CONFIG_BAUDRATE - in bps
@@ -779,6 +895,22 @@ The following options need to be configured:
 		as a convenience, when switching between booting from
 		RAM and NFS.
 
+- Bootcount:
+		CONFIG_BOOTCOUNT_LIMIT
+		Implements a mechanism for detecting a repeating reboot
+		cycle, see:
+		http://www.denx.de/wiki/view/DULG/UBootBootCountLimit
+
+		CONFIG_BOOTCOUNT_ENV
+		If no softreset save registers are found on the hardware
+		"bootcount" is stored in the environment. To prevent a
+		saveenv on all reboots, the environment variable
+		"upgrade_available" is used. If "upgrade_available" is
+		0, "bootcount" is always 0, if "upgrade_available" is
+		1 "bootcount" is incremented in the environment.
+		So the Userspace Applikation must set the "upgrade_available"
+		and "bootcount" variable to 0, if a boot was successfully.
+
 - Pre-Boot Commands:
 		CONFIG_PREBOOT
 
@@ -820,6 +952,7 @@ The following options need to be configured:
 		The default command configuration includes all commands
 		except those marked below with a "*".
 
+		CONFIG_CMD_AES		  AES 128 CBC encrypt/decrypt
 		CONFIG_CMD_ASKENV	* ask for env variable
 		CONFIG_CMD_BDI		  bdinfo
 		CONFIG_CMD_BEDBUG	* Include BedBug Debugger
@@ -827,6 +960,7 @@ The following options need to be configured:
 		CONFIG_CMD_BSP		* Board specific commands
 		CONFIG_CMD_BOOTD	  bootd
 		CONFIG_CMD_CACHE	* icache, dcache
+		CONFIG_CMD_CLK   	* clock command support
 		CONFIG_CMD_CONSOLE	  coninfo
 		CONFIG_CMD_CRC32	* crc32
 		CONFIG_CMD_DATE		* support for RTC, date/time...
@@ -843,13 +977,15 @@ The following options need to be configured:
 		CONFIG_CMD_ELF		* bootelf, bootvx
 		CONFIG_CMD_ENV_CALLBACK	* display details about env callbacks
 		CONFIG_CMD_ENV_FLAGS	* display details about env flags
+		CONFIG_CMD_ENV_EXISTS	* check existence of env variable
 		CONFIG_CMD_EXPORTENV	* export the environment
 		CONFIG_CMD_EXT2		* ext2 command support
 		CONFIG_CMD_EXT4		* ext4 command support
+		CONFIG_CMD_FS_GENERIC	* filesystem commands (e.g. load, ls)
+					  that work for multiple fs types
 		CONFIG_CMD_SAVEENV	  saveenv
 		CONFIG_CMD_FDC		* Floppy Disk Support
 		CONFIG_CMD_FAT		* FAT command support
-		CONFIG_CMD_FDOS		* Dos diskette Support
 		CONFIG_CMD_FLASH	  flinfo, erase, protect
 		CONFIG_CMD_FPGA		  FPGA device initialization support
 		CONFIG_CMD_FUSE		* Device fuse support
@@ -864,6 +1000,7 @@ The following options need to be configured:
 		CONFIG_CMD_IMLS		  List all images found in NOR flash
 		CONFIG_CMD_IMLS_NAND	* List all images found in NAND flash
 		CONFIG_CMD_IMMAP	* IMMR dump support
+		CONFIG_CMD_IOTRACE	* I/O tracing for debugging
 		CONFIG_CMD_IMPORTENV	* import an environment
 		CONFIG_CMD_INI		* import data from an ini file into the env
 		CONFIG_CMD_IRQ		* irqinfo
@@ -919,7 +1056,7 @@ The following options need to be configured:
 		CONFIG_CMD_CDP		* Cisco Discover Protocol support
 		CONFIG_CMD_MFSL		* Microblaze FSL support
 		CONFIG_CMD_XIMG		  Load part of Multi Image
-
+		CONFIG_CMD_UUID		* Generate random UUID or GUID string
 
 		EXAMPLE: If you want all functions except of network
 		support you can write:
@@ -1027,7 +1164,6 @@ The following options need to be configured:
 
 - GPIO Support:
 		CONFIG_PCA953X		- use NXP's PCA953X series I2C GPIO
-		CONFIG_PCA953X_INFO	- enable pca953x info command
 
 		The CONFIG_SYS_I2C_PCA953X_WIDTH option specifies a list of
 		chip-ngpio pairs that tell the PCA953X driver the number of
@@ -1035,6 +1171,28 @@ The following options need to be configured:
 
 		Note that if the GPIO device uses I2C, then the I2C interface
 		must also be configured. See I2C Support, below.
+
+- I/O tracing:
+		When CONFIG_IO_TRACE is selected, U-Boot intercepts all I/O
+		accesses and can checksum them or write a list of them out
+		to memory. See the 'iotrace' command for details. This is
+		useful for testing device drivers since it can confirm that
+		the driver behaves the same way before and after a code
+		change. Currently this is supported on sandbox and arm. To
+		add support for your architecture, add '#include <iotrace.h>'
+		to the bottom of arch/<arch>/include/asm/io.h and test.
+
+		Example output from the 'iotrace stats' command is below.
+		Note that if the trace buffer is exhausted, the checksum will
+		still continue to operate.
+
+			iotrace is enabled
+			Start:  10000000	(buffer start address)
+			Size:   00010000	(buffer size)
+			Offset: 00000120	(current buffer offset)
+			Output: 10000120	(start + offset)
+			Count:  00000018	(number of trace records)
+			CRC32:  9526fb66	(CRC32 of all trace records)
 
 - Timestamp Support:
 
@@ -1289,9 +1447,6 @@ The following options need to be configured:
 		CONFIG_USB_EHCI_TXFIFO_THRESH enables setting of the
 		txfilltuning field in the EHCI controller on reset.
 
-		CONFIG_USB_HUB_MIN_POWER_ON_DELAY defines the minimum
-		interval for usb hub power-on delay.(minimum 100msec)
-
 - USB Device:
 		Define the below if you wish to use the USB console.
 		Once firmware is rebuilt from a serial console issue the
@@ -1391,6 +1546,16 @@ The following options need to be configured:
 			CONFIG_SH_MMCIF_CLK
 			Define the clock frequency for MMCIF
 
+		CONFIG_GENERIC_MMC
+		Enable the generic MMC driver
+
+		CONFIG_SUPPORT_EMMC_BOOT
+		Enable some additional features of the eMMC boot partitions.
+
+		CONFIG_SUPPORT_EMMC_RPMB
+		Enable the commands for reading, writing and programming the
+		key for the Replay Protection Memory Block partition in eMMC.
+
 - USB Device Firmware Update (DFU) class support:
 		CONFIG_DFU_FUNCTION
 		This enables the USB portion of the DFU USB class
@@ -1426,6 +1591,38 @@ The following options need to be configured:
 		this to the maximum filesize (in bytes) for the buffer.
 		Default is 4 MiB if undefined.
 
+		DFU_DEFAULT_POLL_TIMEOUT
+		Poll timeout [ms], is the timeout a device can send to the
+		host. The host must wait for this timeout before sending
+		a subsequent DFU_GET_STATUS request to the device.
+
+		DFU_MANIFEST_POLL_TIMEOUT
+		Poll timeout [ms], which the device sends to the host when
+		entering dfuMANIFEST state. Host waits this timeout, before
+		sending again an USB request to the device.
+
+- USB Device Android Fastboot support:
+		CONFIG_CMD_FASTBOOT
+		This enables the command "fastboot" which enables the Android
+		fastboot mode for the platform's USB device. Fastboot is a USB
+		protocol for downloading images, flashing and device control
+		used on Android devices.
+		See doc/README.android-fastboot for more information.
+
+		CONFIG_ANDROID_BOOT_IMAGE
+		This enables support for booting images which use the Android
+		image format header.
+
+		CONFIG_USB_FASTBOOT_BUF_ADDR
+		The fastboot protocol requires a large memory buffer for
+		downloads. Define this to the starting RAM address to use for
+		downloaded images.
+
+		CONFIG_USB_FASTBOOT_BUF_SIZE
+		The fastboot protocol requires a large memory buffer for
+		downloads. This buffer should be as large as possible for a
+		platform. Define this to the size available RAM for fastboot.
+
 - Journaling Flash filesystem support:
 		CONFIG_JFFS2_NAND, CONFIG_JFFS2_NAND_OFF, CONFIG_JFFS2_NAND_SIZE,
 		CONFIG_JFFS2_NAND_DEV
@@ -1459,6 +1656,12 @@ CBFS (Coreboot Filesystem) support
 		Define this to enable support for reading from a Coreboot
 		filesystem. Available commands are cbfsinit, cbfsinfo, cbfsls
 		and cbfsload.
+
+- FAT(File Allocation Table) filesystem cluster size:
+		CONFIG_FS_FAT_MAX_CLUSTSIZE
+
+		Define the max cluster size for fat operations else
+		a default value of 65536 will be defined.
 
 - Keyboard Support:
 		CONFIG_ISA_KEYBOARD
@@ -1642,7 +1845,7 @@ CBFS (Coreboot Filesystem) support
 
 		If this option is set, then U-Boot will prevent the environment
 		variable "splashimage" from being set to a problematic address
-		(see README.displaying-bmps and README.arm-unaligned-accesses).
+		(see README.displaying-bmps).
 		This option is useful for targets where, due to alignment
 		restrictions, an improperly aligned BMP image will cause a data
 		abort. If you think you will not have problems with unaligned
@@ -1951,6 +2154,21 @@ CBFS (Coreboot Filesystem) support
 		kernel). Defining CONFIG_STATUS_LED enables this
 		feature in U-Boot.
 
+		Additional options:
+
+		CONFIG_GPIO_LED
+		The status LED can be connected to a GPIO pin.
+		In such cases, the gpio_led driver can be used as a
+		status LED backend implementation. Define CONFIG_GPIO_LED
+		to include the gpio_led driver in the U-Boot binary.
+
+		CONFIG_GPIO_LED_INVERTED_TABLE
+		Some GPIO connected LEDs may have inverted polarity in which
+		case the GPIO high value corresponds to LED off state and
+		GPIO low value corresponds to LED on state.
+		In such cases CONFIG_GPIO_LED_INVERTED_TABLE may be defined
+		with a list of GPIO LEDs that have inverted polarity.
+
 - CAN Support:	CONFIG_CAN_DRIVER
 
 		Defining CONFIG_CAN_DRIVER enables CAN driver support
@@ -1994,14 +2212,96 @@ CBFS (Coreboot Filesystem) support
 		    second bus.
 
 		- drivers/i2c/tegra_i2c.c:
-		 - activate this driver with CONFIG_SYS_I2C_TEGRA
-		 - This driver adds 4 i2c buses with a fix speed from
-		   100000 and the slave addr 0!
+		  - activate this driver with CONFIG_SYS_I2C_TEGRA
+		  - This driver adds 4 i2c buses with a fix speed from
+		    100000 and the slave addr 0!
 
 		- drivers/i2c/ppc4xx_i2c.c
 		  - activate this driver with CONFIG_SYS_I2C_PPC4XX
 		  - CONFIG_SYS_I2C_PPC4XX_CH0 activate hardware channel 0
 		  - CONFIG_SYS_I2C_PPC4XX_CH1 activate hardware channel 1
+
+		- drivers/i2c/i2c_mxc.c
+		  - activate this driver with CONFIG_SYS_I2C_MXC
+		  - define speed for bus 1 with CONFIG_SYS_MXC_I2C1_SPEED
+		  - define slave for bus 1 with CONFIG_SYS_MXC_I2C1_SLAVE
+		  - define speed for bus 2 with CONFIG_SYS_MXC_I2C2_SPEED
+		  - define slave for bus 2 with CONFIG_SYS_MXC_I2C2_SLAVE
+		  - define speed for bus 3 with CONFIG_SYS_MXC_I2C3_SPEED
+		  - define slave for bus 3 with CONFIG_SYS_MXC_I2C3_SLAVE
+		If thoses defines are not set, default value is 100000
+		for speed, and 0 for slave.
+
+		- drivers/i2c/rcar_i2c.c:
+		  - activate this driver with CONFIG_SYS_I2C_RCAR
+		  - This driver adds 4 i2c buses
+
+		  - CONFIG_SYS_RCAR_I2C0_BASE for setting the register channel 0
+		  - CONFIG_SYS_RCAR_I2C0_SPEED for for the speed channel 0
+		  - CONFIG_SYS_RCAR_I2C1_BASE for setting the register channel 1
+		  - CONFIG_SYS_RCAR_I2C1_SPEED for for the speed channel 1
+		  - CONFIG_SYS_RCAR_I2C2_BASE for setting the register channel 2
+		  - CONFIG_SYS_RCAR_I2C2_SPEED for for the speed channel 2
+		  - CONFIG_SYS_RCAR_I2C3_BASE for setting the register channel 3
+		  - CONFIG_SYS_RCAR_I2C3_SPEED for for the speed channel 3
+		  - CONFIF_SYS_RCAR_I2C_NUM_CONTROLLERS for number of i2c buses
+
+		- drivers/i2c/sh_i2c.c:
+		  - activate this driver with CONFIG_SYS_I2C_SH
+		  - This driver adds from 2 to 5 i2c buses
+
+		  - CONFIG_SYS_I2C_SH_BASE0 for setting the register channel 0
+		  - CONFIG_SYS_I2C_SH_SPEED0 for for the speed channel 0
+		  - CONFIG_SYS_I2C_SH_BASE1 for setting the register channel 1
+		  - CONFIG_SYS_I2C_SH_SPEED1 for for the speed channel 1
+		  - CONFIG_SYS_I2C_SH_BASE2 for setting the register channel 2
+		  - CONFIG_SYS_I2C_SH_SPEED2 for for the speed channel 2
+		  - CONFIG_SYS_I2C_SH_BASE3 for setting the register channel 3
+		  - CONFIG_SYS_I2C_SH_SPEED3 for for the speed channel 3
+		  - CONFIG_SYS_I2C_SH_BASE4 for setting the register channel 4
+		  - CONFIG_SYS_I2C_SH_SPEED4 for for the speed channel 4
+		  - CONFIG_SYS_I2C_SH_BASE5 for setting the register channel 5
+		  - CONFIG_SYS_I2C_SH_SPEED5 for for the speed channel 5
+		  - CONFIF_SYS_I2C_SH_NUM_CONTROLLERS for nummber of i2c buses
+
+		- drivers/i2c/omap24xx_i2c.c
+		  - activate this driver with CONFIG_SYS_I2C_OMAP24XX
+		  - CONFIG_SYS_OMAP24_I2C_SPEED speed channel 0
+		  - CONFIG_SYS_OMAP24_I2C_SLAVE slave addr channel 0
+		  - CONFIG_SYS_OMAP24_I2C_SPEED1 speed channel 1
+		  - CONFIG_SYS_OMAP24_I2C_SLAVE1 slave addr channel 1
+		  - CONFIG_SYS_OMAP24_I2C_SPEED2 speed channel 2
+		  - CONFIG_SYS_OMAP24_I2C_SLAVE2 slave addr channel 2
+		  - CONFIG_SYS_OMAP24_I2C_SPEED3 speed channel 3
+		  - CONFIG_SYS_OMAP24_I2C_SLAVE3 slave addr channel 3
+		  - CONFIG_SYS_OMAP24_I2C_SPEED4 speed channel 4
+		  - CONFIG_SYS_OMAP24_I2C_SLAVE4 slave addr channel 4
+
+		- drivers/i2c/zynq_i2c.c
+		  - activate this driver with CONFIG_SYS_I2C_ZYNQ
+		  - set CONFIG_SYS_I2C_ZYNQ_SPEED for speed setting
+		  - set CONFIG_SYS_I2C_ZYNQ_SLAVE for slave addr
+
+		- drivers/i2c/s3c24x0_i2c.c:
+		  - activate this driver with CONFIG_SYS_I2C_S3C24X0
+		  - This driver adds i2c buses (11 for Exynos5250, Exynos5420
+		    9 i2c buses for Exynos4 and 1 for S3C24X0 SoCs from Samsung)
+		    with a fix speed from 100000 and the slave addr 0!
+
+		- drivers/i2c/ihs_i2c.c
+		  - activate this driver with CONFIG_SYS_I2C_IHS
+		  - CONFIG_SYS_I2C_IHS_CH0 activate hardware channel 0
+		  - CONFIG_SYS_I2C_IHS_SPEED_0 speed channel 0
+		  - CONFIG_SYS_I2C_IHS_SLAVE_0 slave addr channel 0
+		  - CONFIG_SYS_I2C_IHS_CH1 activate hardware channel 1
+		  - CONFIG_SYS_I2C_IHS_SPEED_1 speed channel 1
+		  - CONFIG_SYS_I2C_IHS_SLAVE_1 slave addr channel 1
+		  - CONFIG_SYS_I2C_IHS_CH2 activate hardware channel 2
+		  - CONFIG_SYS_I2C_IHS_SPEED_2 speed channel 2
+		  - CONFIG_SYS_I2C_IHS_SLAVE_2 slave addr channel 2
+		  - CONFIG_SYS_I2C_IHS_CH3 activate hardware channel 3
+		  - CONFIG_SYS_I2C_IHS_SPEED_3 speed channel 3
+		  - CONFIG_SYS_I2C_IHS_SLAVE_3 slave addr channel 3
 
 		additional defines:
 
@@ -2315,6 +2615,19 @@ CBFS (Coreboot Filesystem) support
 
 		Specify the number of FPGA devices to support.
 
+		CONFIG_CMD_FPGA_LOADMK
+
+		Enable support for fpga loadmk command
+
+		CONFIG_CMD_FPGA_LOADP
+
+		Enable support for fpga loadp command - load partial bitstream
+
+		CONFIG_CMD_FPGA_LOADBP
+
+		Enable support for fpga loadbp command - load partial bitstream
+		(Xilinx only)
+
 		CONFIG_SYS_FPGA_PROG_FEEDBACK
 
 		Enable printing of hash marks during FPGA configuration.
@@ -2607,6 +2920,12 @@ CBFS (Coreboot Filesystem) support
 		Define this option to use the Bank addr/Extended addr
 		support on SPI flashes which has size > 16Mbytes.
 
+		CONFIG_SF_DUAL_FLASH		Dual flash memories
+
+		Define this option to use dual flash support where two flash
+		memories can be connected with a given cs line.
+		currently Xilinx Zynq qspi support these type of connections.
+
 - SystemACE Support:
 		CONFIG_SYSTEMACE
 
@@ -2677,11 +2996,31 @@ CBFS (Coreboot Filesystem) support
 		CONFIG_RSA
 
 		This enables the RSA algorithm used for FIT image verification
-		in U-Boot. See doc/uImage/signature for more information.
+		in U-Boot. See doc/uImage.FIT/signature.txt for more information.
 
 		The signing part is build into mkimage regardless of this
 		option.
 
+- bootcount support:
+		CONFIG_BOOTCOUNT_LIMIT
+
+		This enables the bootcounter support, see:
+		http://www.denx.de/wiki/DULG/UBootBootCountLimit
+
+		CONFIG_AT91SAM9XE
+		enable special bootcounter support on at91sam9xe based boards.
+		CONFIG_BLACKFIN
+		enable special bootcounter support on blackfin based boards.
+		CONFIG_SOC_DA8XX
+		enable special bootcounter support on da850 based boards.
+		CONFIG_BOOTCOUNT_RAM
+		enable support for the bootcounter in RAM
+		CONFIG_BOOTCOUNT_I2C
+		enable support for the bootcounter on an i2c (like RTC) device.
+			CONFIG_SYS_I2C_RTC_ADDR = i2c chip address
+			CONFIG_SYS_BOOTCOUNT_ADDR = i2c addr which is used for
+						    the bootcounter.
+			CONFIG_BOOTCOUNT_ALEN = address len
 
 - Show boot progress:
 		CONFIG_SHOW_BOOT_PROGRESS
@@ -2896,6 +3235,19 @@ FIT uImage format:
  -150	common/cmd_nand.c	Incorrect FIT image format
   151	common/cmd_nand.c	FIT image format OK
 
+- legacy image format:
+		CONFIG_IMAGE_FORMAT_LEGACY
+		enables the legacy image format support in U-Boot.
+
+		Default:
+		enabled if CONFIG_FIT_SIGNATURE is not defined.
+
+		CONFIG_DISABLE_IMAGE_LEGACY
+		disable the legacy image format
+
+		This define is introduced, as the legacy image format is
+		enabled per default for backward compatibility.
+
 - FIT image support:
 		CONFIG_FIT
 		Enable support for the FIT uImage format.
@@ -2911,6 +3263,16 @@ FIT uImage format:
 		This option enables signature verification of FIT uImages,
 		using a hash signed and verified using RSA. See
 		doc/uImage.FIT/signature.txt for more details.
+
+		WARNING: When relying on signed FIT images with required
+		signature check the legacy image format is default
+		disabled. If a board need legacy image format support
+		enable this through CONFIG_IMAGE_FORMAT_LEGACY
+
+		CONFIG_FIT_DISABLE_SHA256
+		Supporting SHA256 hashes has quite an impact on binary size.
+		For constrained systems sha256 hash support can be disabled
+		with this option.
 
 - Standalone program support:
 		CONFIG_STANDALONE_LOAD_ADDR
@@ -3035,6 +3397,10 @@ FIT uImage format:
 		supports MMC, NAND and YMODEM loading of U-Boot and NAND
 		NAND loading of the Linux Kernel.
 
+		CONFIG_SPL_OS_BOOT
+		Enable booting directly to an OS from SPL.
+		See also: doc/README.falcon
+
 		CONFIG_SPL_DISPLAY_PRINT
 		For ARM, enable an optional function to print more information
 		about the running system.
@@ -3093,6 +3459,9 @@ FIT uImage format:
 		continuing (the hardware starts execution after just
 		loading the first page rather than the full 4K).
 
+		CONFIG_SPL_SKIP_RELOCATE
+		Avoid SPL relocation
+
 		CONFIG_SPL_NAND_BASE
 		Include nand_base.c in the SPL.  Requires
 		CONFIG_SPL_NAND_DRIVERS.
@@ -3107,9 +3476,13 @@ FIT uImage format:
 		Support for NAND boot using simple NAND drivers that
 		expose the cmd_ctrl() interface.
 
+		CONFIG_SPL_MTD_SUPPORT
+		Support for the MTD subsystem within SPL.  Useful for
+		environment on NAND support within SPL.
+
 		CONFIG_SPL_MPC8XXX_INIT_DDR_SUPPORT
 		Set for the SPL on PPC mpc8xxx targets, support for
-		arch/powerpc/cpu/mpc8xxx/ddr/libddr.o in SPL binary.
+		drivers/ddr/fsl/libddr.o in SPL binary.
 
 		CONFIG_SPL_COMMON_INIT_DDR
 		Set for common ddr init with serial presence detect in
@@ -3122,6 +3495,9 @@ FIT uImage format:
 		CONFIG_SYS_NAND_ECCBYTES
 		Defines the size and behavior of the NAND that SPL uses
 		to read U-Boot
+
+		CONFIG_SPL_NAND_BOOT
+		Add support NAND boot
 
 		CONFIG_SYS_NAND_U_BOOT_OFFS
 		Location in NAND to read U-Boot from
@@ -3259,6 +3635,9 @@ typically in board_init_f() and board_init_r().
 
 Configuration Settings:
 -----------------------
+
+- CONFIG_SYS_SUPPORT_64BIT_DATA: Defined automatically if compiled as 64-bit.
+		Optionally it can be defined to support 64-bit memory commands.
 
 - CONFIG_SYS_LONGHELP: Defined when you want long help messages included;
 		undefine this when you're short of memory.
@@ -3532,12 +3911,6 @@ Configuration Settings:
 	its config.mk file). If you find problems enabling this option on
 	your board please report the problem and send patches!
 
-- CONFIG_SYS_SYM_OFFSETS
-	This is set by architectures that use offsets for link symbols
-	instead of absolute values. So bss_start is obtained using an
-	offset _bss_start_ofs from CONFIG_SYS_TEXT_BASE, rather than
-	directly. You should not need to touch this setting.
-
 - CONFIG_OMAP_PLATFORM_RESET_TIME_MAX_USEC (OMAP only)
 	This is set by OMAP boards for the max time that reset should
 	be asserted. See doc/README.omap-reset-time for details on how
@@ -3716,6 +4089,43 @@ to save the current settings.
 	  environment area within the total memory of your DataFlash placed
 	  at the specified address.
 
+- CONFIG_ENV_IS_IN_SPI_FLASH:
+
+	Define this if you have a SPI Flash memory device which you
+	want to use for the environment.
+
+	- CONFIG_ENV_OFFSET:
+	- CONFIG_ENV_SIZE:
+
+	  These two #defines specify the offset and size of the
+	  environment area within the SPI Flash. CONFIG_ENV_OFFSET must be
+	  aligned to an erase sector boundary.
+
+	- CONFIG_ENV_SECT_SIZE:
+
+	  Define the SPI flash's sector size.
+
+	- CONFIG_ENV_OFFSET_REDUND (optional):
+
+	  This setting describes a second storage area of CONFIG_ENV_SIZE
+	  size used to hold a redundant copy of the environment data, so
+	  that there is a valid backup copy in case there is a power failure
+	  during a "saveenv" operation. CONFIG_ENV_OFFSET_RENDUND must be
+	  aligned to an erase sector boundary.
+
+	- CONFIG_ENV_SPI_BUS (optional):
+	- CONFIG_ENV_SPI_CS (optional):
+
+	  Define the SPI bus and chip select. If not defined they will be 0.
+
+	- CONFIG_ENV_SPI_MAX_HZ (optional):
+
+	  Define the SPI max work clock. If not defined then use 1MHz.
+
+	- CONFIG_ENV_SPI_MODE (optional):
+
+	  Define the SPI work mode. If not defined then use SPI_MODE_3.
+
 - CONFIG_ENV_IS_IN_REMOTE:
 
 	Define this if you have a remote memory space which you
@@ -3802,6 +4212,37 @@ but it can not erase, write this NOR flash by SRIO or PCIE interface.
 
 	  You will probably want to define these to avoid a really noisy system
 	  when storing the env in UBI.
+
+- CONFIG_ENV_IS_IN_FAT:
+       Define this if you want to use the FAT file system for the environment.
+
+       - FAT_ENV_INTERFACE:
+
+         Define this to a string that is the name of the block device.
+
+       - FAT_ENV_DEV_AND_PART:
+
+         Define this to a string to specify the partition of the device. It can
+         be as following:
+
+           "D:P", "D:0", "D", "D:" or "D:auto" (D, P are integers. And P >= 1)
+               - "D:P": device D partition P. Error occurs if device D has no
+                        partition table.
+               - "D:0": device D.
+               - "D" or "D:": device D partition 1 if device D has partition
+                              table, or the whole device D if has no partition
+                              table.
+               - "D:auto": first partition in device D with bootable flag set.
+                           If none, first valid paratition in device D. If no
+                           partition table then means device D.
+
+       - FAT_ENV_FILE:
+
+         It's a string of the FAT file name. This file use to store the
+         envrionment.
+
+       - CONFIG_FAT_WRITE:
+         This should be defined. Otherwise it cannot save the envrionment file.
 
 - CONFIG_ENV_IS_IN_MMC:
 
@@ -4266,6 +4707,14 @@ Low Level (hardware related) configuration options:
 
 		NOTE : currently only supported on AM335x platforms.
 
+- CONFIG_SPL_AM33XX_ENABLE_RTC32K_OSC:
+		Enables the RTC32K OSC on AM33xx based plattforms
+
+- CONFIG_SYS_NAND_NO_SUBPAGE_WRITE
+		Option to disable subpage write in NAND driver
+		driver that uses this:
+		drivers/mtd/nand/davinci_nand.c
+
 Freescale QE/FMAN Firmware Support:
 -----------------------------------
 
@@ -4275,8 +4724,13 @@ This firmware often needs to be loaded during U-Boot booting, so macros
 are used to identify the storage device (NOR flash, SPI, etc) and the address
 within that device.
 
-- CONFIG_SYS_QE_FMAN_FW_ADDR
-	The address in the storage device where the firmware is located.  The
+- CONFIG_SYS_FMAN_FW_ADDR
+	The address in the storage device where the FMAN microcode is located.  The
+	meaning of this address depends on which CONFIG_SYS_QE_FW_IN_xxx macro
+	is also specified.
+
+- CONFIG_SYS_QE_FW_ADDR
+	The address in the storage device where the QE microcode is located.  The
 	meaning of this address depends on which CONFIG_SYS_QE_FW_IN_xxx macro
 	is also specified.
 
@@ -4309,6 +4763,33 @@ within that device.
 	can be mapped from slave TLB->slave LAW->slave SRIO or PCIE outbound
 	window->master inbound window->master LAW->the ucode address in
 	master's memory space.
+
+Freescale Layerscape Management Complex Firmware Support:
+---------------------------------------------------------
+The Freescale Layerscape Management Complex (MC) supports the loading of
+"firmware".
+This firmware often needs to be loaded during U-Boot booting, so macros
+are used to identify the storage device (NOR flash, SPI, etc) and the address
+within that device.
+
+- CONFIG_FSL_MC_ENET
+	Enable the MC driver for Layerscape SoCs.
+
+- CONFIG_SYS_LS_MC_FW_ADDR
+	The address in the storage device where the firmware is located.  The
+	meaning of this address depends on which CONFIG_SYS_LS_MC_FW_IN_xxx macro
+	is also specified.
+
+- CONFIG_SYS_LS_MC_FW_LENGTH
+	The maximum possible size of the firmware.  The firmware binary format
+	has a field that specifies the actual size of the firmware, but it
+	might not be possible to read any part of the firmware unless some
+	local storage is allocated to hold the entire firmware first.
+
+- CONFIG_SYS_LS_MC_FW_IN_NOR
+	Specifies that MC firmware is located in NOR flash, mapped as
+	normal addressable memory via the LBC. CONFIG_SYS_LS_MC_FW_ADDR is the
+	virtual address in NOR flash.
 
 Building the Software:
 ======================
@@ -4965,6 +5446,11 @@ Information structure as we define in include/asm-<arch>/u-boot.h,
 and make sure that your definition of IMAP_ADDR uses the same value
 as your U-Boot configuration in CONFIG_SYS_IMMR.
 
+Note that U-Boot now has a driver model, a unified model for drivers.
+If you are adding a new driver, plumb it into driver model. If there
+is no uclass available, you are encouraged to create one. See
+doc/driver-model.
+
 
 Configuring the Linux kernel:
 -----------------------------
@@ -5104,6 +5590,15 @@ when your kernel is intended to use an initial ramdisk:
 	Data Size:    566530 Bytes = 553.25 kB = 0.54 MB
 	Load Address: 0x00000000
 	Entry Point:  0x00000000
+
+The "dumpimage" is a tool to disassemble images built by mkimage. Its "-i"
+option performs the converse operation of the mkimage's second form (the "-d"
+option). Given an image built by mkimage, the dumpimage extracts a "data file"
+from the image:
+
+	tools/dumpimage -i image -p position data_file
+	  -i ==> extract from the 'image' a specific 'data_file', \
+	   indexed by 'position'
 
 
 Installing a Linux Image:

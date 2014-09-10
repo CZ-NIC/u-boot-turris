@@ -18,7 +18,6 @@
  */
 
 #define CONFIG_405GP		1	/* This is a PPC405 CPU		*/
-#define CONFIG_4xx		1	/* ...member of PPC4xx family	*/
 #define CONFIG_CPCI405		1	/* ...on a CPCI405 board	*/
 #define CONFIG_CPCI405_VER2	1	/* ...version 2			*/
 
@@ -95,7 +94,6 @@
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory		*/
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt	*/
 
 #undef	CONFIG_SYS_HUSH_PARSER			/* use "hush" command parser	*/
 
@@ -133,8 +131,6 @@
 
 #define CONFIG_SYS_LOAD_ADDR	0x100000	/* default load address */
 #define CONFIG_SYS_EXTBDINFO	1		/* To use extended board_into (bd_t) */
-
-#define CONFIG_SYS_HZ		1000		/* decrementer freq: 1 ms ticks */
 
 #define CONFIG_LOOPW            1       /* enable loopw command         */
 

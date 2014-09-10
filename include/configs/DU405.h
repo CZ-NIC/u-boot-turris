@@ -17,7 +17,6 @@
  * (easy to change)
  */
 #define CONFIG_405GP		1	/* This is a PPC405 CPU		*/
-#define CONFIG_4xx		1	/* ...member of PPC4xx family	*/
 #define CONFIG_DU405		1	/* ...on a DU405 board		*/
 
 #define	CONFIG_SYS_TEXT_BASE	0xFFFD0000
@@ -84,7 +83,6 @@
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory		*/
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt	*/
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size	*/
 #else
@@ -114,8 +112,6 @@
 
 #define CONFIG_SYS_LOAD_ADDR	0x100000	/* default load address */
 #define CONFIG_SYS_EXTBDINFO	1		/* To use extended board_into (bd_t) */
-
-#define CONFIG_SYS_HZ		1000		/* decrementer freq: 1 ms ticks */
 
 #define CONFIG_ZERO_BOOTDELAY_CHECK	/* check for keypress on bootdelay==0 */
 

@@ -219,6 +219,7 @@
 #define CONFIG_CMD_ELF
 #define CONFIG_CMD_DATE
 #define CONFIG_CMD_FPGA
+#define CONFIG_CMD_FPGA_LOADMK
 #define CONFIG_CMD_MII
 #define CONFIG_CMD_BEDBUG
 
@@ -308,11 +309,6 @@
  * Default load address
  */
 #define	CONFIG_SYS_LOAD_ADDR		0x01000000
-
-/*
- * Set decrementer frequency (1 ms ticks)
- */
-#define	CONFIG_SYS_HZ				1000
 
 /*
  * Device memory map (after SDRAM remap to 0x0):

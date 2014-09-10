@@ -11,9 +11,10 @@
 #include <config.h>
 #include <common.h>
 #include <asm/io.h>
-#include <asm/sizes.h>
+#include <linux/sizes.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/at91_pio.h>
+#include <asm/arch/gpio.h>
 
 static struct at91_port *at91_pio_get_port(unsigned port)
 {
@@ -33,6 +34,7 @@ static struct at91_port *at91_pio_get_port(unsigned port)
 #endif
 #endif
 	default:
+		printf("Error: at91_gpio: Fail to get PIO base!\n");
 		return NULL;
 	}
 }
@@ -199,7 +201,7 @@ int at91_set_pio_output(unsigned port, u32 pin, int value)
 	struct at91_port *at91_port = at91_pio_get_port(port);
 	u32 mask;
 
-	if ((port < ATMEL_PIO_PORTS) && (pin < 32)) {
+	if (at91_port && (port < ATMEL_PIO_PORTS) && (pin < 32)) {
 		mask = 1 << pin;
 		writel(mask, &at91_port->idr);
 		writel(mask, &at91_port->pudr);
@@ -355,9 +357,6 @@ int at91_get_pio_value(unsigned port, unsigned pin)
 }
 
 /* Common GPIO API */
-
-#define at91_gpio_to_port(gpio)		(gpio / 32)
-#define at91_gpio_to_pin(gpio)		(gpio % 32)
 
 int gpio_request(unsigned gpio, const char *label)
 {

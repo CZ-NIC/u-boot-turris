@@ -20,12 +20,13 @@
 #include "siemens-am33x-common.h"
 
 #define CONFIG_SYS_MPUCLK	275
-#define DXR2_IOCTRL_VAL	0x18b
-#define DDR_PLL_FREQ	266
-#define CONFIG_SPL_AM33XX_DO_NOT_ENABLE_RTC32K
+#define DDR_PLL_FREQ	303
+#undef CONFIG_SPL_AM33XX_ENABLE_RTC32K_OSC
 
 #define BOARD_DFU_BUTTON_GPIO	27
-#define BOARD_DFU_BUTTON_LED	64
+#define BOARD_DFU_BUTTON_LED	64	/* red LED */
+#define BOARD_STATUS_LED	103	/* green LED */
+#define GPIO_LAN9303_NRST	88	/* GPIO2_24 = gpio88 */
 
 #undef CONFIG_DOS_PARTITION
 #undef CONFIG_CMD_FAT
@@ -49,7 +50,6 @@
 
 #undef CONFIG_MII
 #undef CONFIG_PHY_GIGE
-#define CONFIG_PHY_ADDR			0
 #define CONFIG_PHY_SMSC
 
 #define CONFIG_FACTORYSET
@@ -62,7 +62,7 @@
 /* Default env settings */
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"hostname=dxr2\0" \
-	"nand_img_size=0x300000\0" \
+	"nand_img_size=0x400000\0" \
 	"optargs=\0" \
 	CONFIG_COMMON_ENV_SETTINGS
 
@@ -75,10 +75,9 @@
 	"run dfu_start; " \
 	"reset; " \
 "fi;" \
-"if ping ${serverip}; then " \
-	"run net_nfs; " \
-"fi;" \
-"run nand_boot;"
+"run nand_boot;" \
+"reset;"
+
 
 #else
 #define CONFIG_BOOTDELAY		0

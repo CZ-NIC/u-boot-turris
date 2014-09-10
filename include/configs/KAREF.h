@@ -23,7 +23,6 @@
 #define CONFIG_KAREF	     1		/* Board is Kamino Ref Variant */
 #define CONFIG_440GX		  1	     /* Specifc GX support	*/
 #define CONFIG_440		  1	     /* ... PPC440 family	*/
-#define CONFIG_4xx		  1	     /* ... PPC4xx family	*/
 #define CONFIG_BOARD_EARLY_INIT_F 1	     /* Call board_pre_init	*/
 #define CONFIG_MISC_INIT_F	  1	     /* Call board misc_init_f	*/
 #define CONFIG_MISC_INIT_R	  1	     /* Call board misc_init_r	*/
@@ -273,7 +272,6 @@
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE  230400	     /* kgdb serial port baud	*/
-#define CONFIG_KGDB_SER_INDEX 2		     /* kgdb serial port	*/
 #endif
 
 /*-----------------------------------------------------------------------
@@ -282,8 +280,5 @@
 #undef CONFIG_WATCHDOG			     /* watchdog disabled	*/
 #define CONFIG_SYS_LOAD_ADDR	      0x8000000	     /* default load address	*/
 #define CONFIG_SYS_EXTBDINFO	      1		     /* use extended board_info */
-
-#define CONFIG_SYS_HZ		      100	     /* decr freq: 1 ms ticks	*/
-
 
 #endif	/* __CONFIG_H */

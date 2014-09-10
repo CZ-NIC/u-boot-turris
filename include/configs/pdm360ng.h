@@ -30,7 +30,6 @@
  * High Level Configuration Options
  */
 #define CONFIG_E300		1	/* E300 Family */
-#define CONFIG_MPC512X		1	/* MPC512X family */
 #define CONFIG_FSL_DIU_FB	1	/* FSL DIU */
 
 #define	CONFIG_SYS_TEXT_BASE	0xF0000000
@@ -402,7 +401,6 @@
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 
 #ifdef CONFIG_CMD_KGDB
 	#define CONFIG_SYS_CBSIZE	1024	/* Console I/O Buffer Size */
@@ -417,7 +415,6 @@
 /* Boot Argument Buffer Size */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE
 /* Decrementer freq: 1ms ticks */
-#define CONFIG_SYS_HZ		1000
 
 /*
  * For booting Linux, the board info and command line data
@@ -443,7 +440,6 @@
 
 #ifdef CONFIG_CMD_KGDB
 #define CONFIG_KGDB_BAUDRATE	230400	/* speed of kgdb serial port */
-#define CONFIG_KGDB_SER_INDEX	2	/* which serial port to use */
 #endif
 
 /* POST support */

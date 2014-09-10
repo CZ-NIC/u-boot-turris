@@ -125,6 +125,9 @@ struct phy_driver {
 	/* Called when bringing down the controller */
 	int (*shutdown)(struct phy_device *phydev);
 
+	int (*readext)(struct phy_device *phydev, int addr, int devad, int reg);
+	int (*writeext)(struct phy_device *phydev, int addr, int devad, int reg,
+			u16 val);
 	struct list_head list;
 };
 
@@ -158,6 +161,14 @@ struct phy_device {
 	int asym_pause;
 	u32 phy_id;
 	u32 flags;
+};
+
+struct fixed_link {
+	int phy_id;
+	int duplex;
+	int link_speed;
+	int pause;
+	int asym_pause;
 };
 
 static inline int phy_read(struct phy_device *phydev, int devad, int regnum)
@@ -222,6 +233,8 @@ int phy_realtek_init(void);
 int phy_smsc_init(void);
 int phy_teranetics_init(void);
 int phy_vitesse_init(void);
+
+int board_phy_config(struct phy_device *phydev);
 
 /* PHY UIDs for various PHYs that are referenced in external code */
 #define PHY_UID_TN2020	0x00a19410

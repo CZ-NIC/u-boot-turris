@@ -10,6 +10,7 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
+#include "mx6_common.h"
 #define CONFIG_MX6
 #define CONFIG_DISPLAY_CPUINFO
 #define CONFIG_DISPLAY_BOARDINFO
@@ -23,6 +24,7 @@
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_INITRD_TAG
 #define CONFIG_REVISION_TAG
+#define CONFIG_SYS_GENERIC_BOARD
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(10 * 1024 * 1024)
@@ -30,6 +32,12 @@
 #define CONFIG_BOARD_EARLY_INIT_F
 #define CONFIG_MISC_INIT_R
 #define CONFIG_MXC_GPIO
+#define CONFIG_CI_UDC
+#define CONFIG_USBD_HS
+#define CONFIG_USB_GADGET_DUALSPEED
+#define CONFIG_USB_ETHER
+#define CONFIG_USB_ETH_CDC
+#define CONFIG_NETCONSOLE
 
 #define CONFIG_CMD_FUSE
 #ifdef CONFIG_CMD_FUSE
@@ -52,19 +60,9 @@
 
 /* I2C Configs */
 #define CONFIG_CMD_I2C
-#define CONFIG_I2C_MULTI_BUS
-#define CONFIG_I2C_MXC
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_SPEED		100000
-
-/* OCOTP Configs */
-#define CONFIG_CMD_IMXOTP
-#ifdef CONFIG_CMD_IMXOTP
-#define CONFIG_IMX_OTP
-#define IMX_OTP_BASE			OCOTP_BASE_ADDR
-#define IMX_OTP_ADDR_MAX		0x7F
-#define IMX_OTP_DATA_ERROR_VAL		0xBADABADA
-#define IMX_OTPWRITE_ENABLED
-#endif
 
 /* MMC Configs */
 #define CONFIG_FSL_ESDHC
@@ -118,8 +116,10 @@
 #define CONFIG_USB_STORAGE
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_ASIX
+#define CONFIG_USB_ETHER_MCS7830
 #define CONFIG_USB_ETHER_SMSC95XX
-#define CONFIG_MXC_USB_PORT	1
+#define CONFIG_USB_MAX_CONTROLLER_COUNT 2
+#define CONFIG_EHCI_HCD_INIT_AFTER_RESET	/* For OTG port */
 #define CONFIG_MXC_USB_PORTSC	(PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS	0
 
@@ -142,6 +142,7 @@
 #define CONFIG_CMD_HDMIDETECT
 #define CONFIG_CONSOLE_MUX
 #define CONFIG_IMX_HDMI
+#define CONFIG_IMX_VIDEO_SKIP
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
@@ -182,7 +183,7 @@
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
 	"fdt_file=imx6q-sabrelite.dtb\0" \
-	"fdt_addr=0x11000000\0" \
+	"fdt_addr=0x18000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
 	"mmcdev=0\0" \
@@ -299,7 +300,6 @@
 #define CONFIG_SYS_MEMTEST_SCRATCH     0x10800000
 
 #define CONFIG_SYS_LOAD_ADDR	       CONFIG_LOADADDR
-#define CONFIG_SYS_HZ		       1000
 
 #define CONFIG_CMDLINE_EDITING
 
@@ -354,5 +354,15 @@
 #define CONFIG_CMD_BOOTZ
 #define CONFIG_SUPPORT_RAW_INITRD
 #define CONFIG_CMD_FS_GENERIC
+
+/*
+ * PCI express
+ */
+#ifdef CONFIG_CMD_PCI
+#define CONFIG_PCI
+#define CONFIG_PCI_PNP
+#define CONFIG_PCI_SCAN_SHOW
+#define CONFIG_PCIE_IMX
+#endif
 
 #endif	       /* __CONFIG_H */

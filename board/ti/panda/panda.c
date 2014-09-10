@@ -123,6 +123,66 @@ int get_board_revision(void)
 }
 
 /**
+ * is_panda_es_rev_b3() - Detect if we are running on rev B3 of panda board ES
+ *
+ *
+ * Detect if we are running on B3 version of ES panda board,
+ * This can be done by reading the level of GPIO 171 and checking the
+ * processor revisions.
+ * GPIO171: 1 => Panda ES Rev B3
+ *
+ * Return : return 1 if Panda ES Rev B3 , else return 0
+ */
+u8 is_panda_es_rev_b3(void)
+{
+        int processor_rev = omap_revision();
+        int ret = 0;
+
+        if ((processor_rev >= OMAP4460_ES1_0 &&
+             processor_rev <= OMAP4460_ES1_1)) {
+
+                /* Setup the mux for the common board ID pins (gpio 171) */
+                writew((IEN | M3),
+			(*ctrl)->control_padconf_core_base + UNIPRO_TX0);
+
+                /* if processor_rev is panda ES and GPIO171 is 1,it is rev b3 */
+                ret = gpio_get_value(PANDA_BOARD_ID_2_GPIO);
+        }
+        return ret;
+}
+
+#ifdef CONFIG_SYS_EMIF_PRECALCULATED_TIMING_REGS
+/*
+ * emif_get_reg_dump() - emif_get_reg_dump strong function
+ *
+ * @emif_nr - emif base
+ * @regs - reg dump of timing values
+ *
+ * Strong function to override emif_get_reg_dump weak function in sdram_elpida.c
+ */
+void emif_get_reg_dump(u32 emif_nr, const struct emif_regs **regs)
+{
+	u32 omap4_rev = omap_revision();
+
+	/* Same devices and geometry on both EMIFs */
+	if (omap4_rev == OMAP4430_ES1_0)
+		*regs = &emif_regs_elpida_380_mhz_1cs;
+	else if (omap4_rev == OMAP4430_ES2_0)
+		*regs = &emif_regs_elpida_200_mhz_2cs;
+	else if (omap4_rev == OMAP4430_ES2_3)
+		*regs = &emif_regs_elpida_400_mhz_1cs;
+	else if (omap4_rev < OMAP4470_ES1_0) {
+		if(is_panda_es_rev_b3())
+			*regs = &emif_regs_elpida_400_mhz_1cs;
+		else
+			*regs = &emif_regs_elpida_400_mhz_2cs;
+	}
+	else
+		*regs = &emif_regs_elpida_400_mhz_1cs;
+}
+#endif
+
+/**
  * @brief misc_init_r - Configure Panda board specific configurations
  * such as power configurations, ethernet initialization as phase2 of
  * boot sequence
@@ -133,7 +193,7 @@ int misc_init_r(void)
 {
 	int phy_type;
 	u32 auxclk, altclksrc;
-	uint8_t device_mac[6];
+	u32 id[4];
 
 	/* EHCI is not supported on ES1.0 */
 	if (omap_revision() == OMAP4430_ES1_0)
@@ -187,20 +247,11 @@ int misc_init_r(void)
 
 	writel(altclksrc, &scrm->altclksrc);
 
-	if (!getenv("usbethaddr")) {
-		/*
-		 * create a fake MAC address from the processor ID code.
-		 * first byte is 0x02 to signify locally administered.
-		 */
-		device_mac[0] = 0x02;
-		device_mac[1] = readl(STD_FUSE_DIE_ID_3) & 0xff;
-		device_mac[2] = readl(STD_FUSE_DIE_ID_2) & 0xff;
-		device_mac[3] = readl(STD_FUSE_DIE_ID_1) & 0xff;
-		device_mac[4] = readl(STD_FUSE_DIE_ID_0) & 0xff;
-		device_mac[5] = (readl(STD_FUSE_DIE_ID_0) >> 8) & 0xff;
-
-		eth_setenv_enetaddr("usbethaddr", device_mac);
-	}
+	id[0] = readl(STD_FUSE_DIE_ID_0);
+	id[1] = readl(STD_FUSE_DIE_ID_1);
+	id[2] = readl(STD_FUSE_DIE_ID_2);
+	id[3] = readl(STD_FUSE_DIE_ID_3);
+	usb_fake_mac_from_die_id(id);
 
 	return 0;
 }
@@ -224,36 +275,6 @@ void set_muxconf_regs_essential(void)
 			   sizeof(struct pad_conf_entry));
 }
 
-void set_muxconf_regs_non_essential(void)
-{
-	do_set_mux((*ctrl)->control_padconf_core_base,
-		   core_padconf_array_non_essential,
-		   sizeof(core_padconf_array_non_essential) /
-		   sizeof(struct pad_conf_entry));
-
-	if (omap_revision() < OMAP4460_ES1_0)
-		do_set_mux((*ctrl)->control_padconf_core_base,
-			   core_padconf_array_non_essential_4430,
-			   sizeof(core_padconf_array_non_essential_4430) /
-			   sizeof(struct pad_conf_entry));
-	else
-		do_set_mux((*ctrl)->control_padconf_core_base,
-			   core_padconf_array_non_essential_4460,
-			   sizeof(core_padconf_array_non_essential_4460) /
-			   sizeof(struct pad_conf_entry));
-
-	do_set_mux((*ctrl)->control_padconf_wkup_base,
-		   wkup_padconf_array_non_essential,
-		   sizeof(wkup_padconf_array_non_essential) /
-		   sizeof(struct pad_conf_entry));
-
-	if (omap_revision() < OMAP4460_ES1_0)
-		do_set_mux((*ctrl)->control_padconf_wkup_base,
-			   wkup_padconf_array_non_essential_4430,
-			   sizeof(wkup_padconf_array_non_essential_4430) /
-			   sizeof(struct pad_conf_entry));
-}
-
 #if !defined(CONFIG_SPL_BUILD) && defined(CONFIG_GENERIC_MMC)
 int board_mmc_init(bd_t *bis)
 {
@@ -269,7 +290,8 @@ static struct omap_usbhs_board_data usbhs_bdata = {
 	.port_mode[2] = OMAP_USBHS_PORT_MODE_UNUSED,
 };
 
-int ehci_hcd_init(int index, struct ehci_hccr **hccr, struct ehci_hcor **hcor)
+int ehci_hcd_init(int index, enum usb_init_type init,
+		struct ehci_hccr **hccr, struct ehci_hcor **hcor)
 {
 	int ret;
 	unsigned int utmi_clk;
@@ -277,9 +299,9 @@ int ehci_hcd_init(int index, struct ehci_hccr **hccr, struct ehci_hcor **hcor)
 	/* Now we can enable our port clocks */
 	utmi_clk = readl((void *)CM_L3INIT_HSUSBHOST_CLKCTRL);
 	utmi_clk |= HSUSBHOST_CLKCTRL_CLKSEL_UTMI_P1_MASK;
-	sr32((void *)CM_L3INIT_HSUSBHOST_CLKCTRL, 0, 32, utmi_clk);
+	setbits_le32((void *)CM_L3INIT_HSUSBHOST_CLKCTRL, utmi_clk);
 
-	ret = omap_ehci_hcd_init(&usbhs_bdata, hccr, hcor);
+	ret = omap_ehci_hcd_init(index, &usbhs_bdata, hccr, hcor);
 	if (ret < 0)
 		return ret;
 

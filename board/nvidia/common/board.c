@@ -31,7 +31,7 @@
 #endif
 #ifdef CONFIG_USB_EHCI_TEGRA
 #include <asm/arch-tegra/usb.h>
-#include <asm/arch/usb.h>
+#include <usb.h>
 #endif
 #ifdef CONFIG_TEGRA_MMC
 #include <asm/arch-tegra/tegra_mmc.h>
@@ -47,16 +47,11 @@ const struct tegra_sysinfo sysinfo = {
 	CONFIG_TEGRA_BOARD_STRING
 };
 
-#ifndef CONFIG_SPL_BUILD
-/*
- * Routine: timer_init
- * Description: init the timestamp and lastinc value
- */
-int timer_init(void)
+void __pinmux_init(void)
 {
-	return 0;
 }
-#endif
+
+void pinmux_init(void) __attribute__((weak, alias("__pinmux_init")));
 
 void __pin_mux_usb(void)
 {
@@ -77,12 +72,14 @@ void __gpio_early_init_uart(void)
 void gpio_early_init_uart(void)
 __attribute__((weak, alias("__gpio_early_init_uart")));
 
+#if defined(CONFIG_TEGRA_NAND)
 void __pin_mux_nand(void)
 {
 	funcmux_select(PERIPH_ID_NDFLASH, FUNCMUX_DEFAULT);
 }
 
 void pin_mux_nand(void) __attribute__((weak, alias("__pin_mux_nand")));
+#endif
 
 void __pin_mux_display(void)
 {
@@ -153,8 +150,9 @@ int board_init(void)
 
 #ifdef CONFIG_USB_EHCI_TEGRA
 	pin_mux_usb();
-	board_usb_init(gd->fdt_blob);
+	usb_process_devicetree(gd->fdt_blob);
 #endif
+
 #ifdef CONFIG_LCD
 	tegra_lcd_check_next_stage(gd->fdt_blob, 0);
 #endif
@@ -183,9 +181,7 @@ void gpio_early_init(void) __attribute__((weak, alias("__gpio_early_init")));
 
 int board_early_init_f(void)
 {
-#if !defined(CONFIG_TEGRA20)
 	pinmux_init();
-#endif
 	board_init_uart_f();
 
 	/* Initialize periph GPIOs */

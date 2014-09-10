@@ -12,8 +12,7 @@
  * High Level Configuration Options
  * (easy to change)
  */
-#define CONFIG_MPC5xxx		1	/* This is an MPC5xxx CPU		*/
-#define CONFIG_MPC5200		1	/* (more precisely an MPC5200 CPU)	*/
+#define CONFIG_MPC5200		1	/* MPC5200 CPU */
 
 #define CONFIG_SYS_MPC5XXX_CLKIN	33000000 /* ... running at 33.000000MHz	*/
 
@@ -142,8 +141,6 @@
 
 /*use  Hardware WDT */
 #define CONFIG_HW_WATCHDOG
-
-#define CONFIG_SYS_HZ			1000	/* decrementer freq: 1 ms ticks */
 
 #define CONFIG_SYS_CACHELINE_SIZE	32	/* For MPC5xxx CPUs		*/
 #if defined(CONFIG_CMD_KGDB)

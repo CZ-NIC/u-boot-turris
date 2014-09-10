@@ -3,9 +3,10 @@
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
-#include "mkimage.h"
+#include "imagetool.h"
 #include <image.h>
 #include "pblimage.h"
+#include "pbl_crc32.h"
 
 /*
  * Initialize to an invalid value.
@@ -137,52 +138,6 @@ static void pbl_parser(char *name)
 	fclose(fd);
 }
 
-static uint32_t crc_table[256];
-
-static void make_crc_table(void)
-{
-	uint32_t mask;
-	int i, j;
-	uint32_t poly; /* polynomial exclusive-or pattern */
-
-	/*
-	 * the polynomial used by PBL is 1 + x1 + x2 + x4 + x5 + x7 + x8 + x10
-	 * + x11 + x12 + x16 + x22 + x23 + x26 + x32.
-	 */
-	poly = 0x04c11db7;
-
-	for (i = 0; i < 256; i++) {
-		mask = i << 24;
-		for (j = 0; j < 8; j++) {
-			if (mask & 0x80000000)
-				mask = (mask << 1) ^ poly;
-			else
-				mask <<= 1;
-		}
-		crc_table[i] = mask;
-	}
-}
-
-unsigned long pbl_crc32(unsigned long crc, const char *buf, uint32_t len)
-{
-	uint32_t crc32_val = 0xffffffff;
-	uint32_t xor = 0x0;
-	int i;
-
-	make_crc_table();
-
-	for (i = 0; i < len; i++)
-		crc32_val = (crc32_val << 8) ^
-			crc_table[(crc32_val >> 24) ^ (*buf++ & 0xff)];
-
-	crc32_val = crc32_val ^ xor;
-	if (crc32_val < 0) {
-		crc32_val += 0xffffffff;
-		crc32_val += 1;
-	}
-	return crc32_val;
-}
-
 static uint32_t reverse_byte(uint32_t val)
 {
 	uint32_t temp;
@@ -242,7 +197,7 @@ static void add_end_cmd(void)
 	}
 }
 
-void pbl_load_uboot(int ifd, struct mkimage_params *params)
+void pbl_load_uboot(int ifd, struct image_tool_params *params)
 {
 	FILE *fp_uboot;
 	int size;
@@ -281,7 +236,7 @@ static int pblimage_check_image_types(uint8_t type)
 }
 
 static int pblimage_verify_header(unsigned char *ptr, int image_size,
-			struct mkimage_params *params)
+			struct image_tool_params *params)
 {
 	struct pbl_header *pbl_hdr = (struct pbl_header *) ptr;
 
@@ -308,7 +263,7 @@ static void pblimage_print_header(const void *ptr)
 }
 
 static void pblimage_set_header(void *ptr, struct stat *sbuf, int ifd,
-				struct mkimage_params *params)
+				struct image_tool_params *params)
 {
 	/*nothing need to do, pbl_load_uboot takes care of whole file. */
 }
@@ -327,5 +282,5 @@ static struct image_type_params pblimage_params = {
 void init_pbl_image_type(void)
 {
 	pbl_size = 0;
-	mkimage_register(&pblimage_params);
+	register_image_type(&pblimage_params);
 }

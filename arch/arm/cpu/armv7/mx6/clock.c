@@ -5,6 +5,7 @@
  */
 
 #include <common.h>
+#include <div64.h>
 #include <asm/io.h>
 #include <asm/errno.h>
 #include <asm/arch/imx-regs.h>
@@ -48,7 +49,7 @@ void enable_usboh3_clk(unsigned char enable)
 
 }
 
-#ifdef CONFIG_I2C_MXC
+#ifdef CONFIG_SYS_I2C_MXC
 /* i2c_num can be from 0 - 2 */
 int enable_i2c_clk(unsigned char enable, unsigned i2c_num)
 {
@@ -79,7 +80,7 @@ static u32 decode_pll(enum pll_clocks pll, u32 infreq)
 		div = __raw_readl(&imx_ccm->analog_pll_sys);
 		div &= BM_ANADIG_PLL_SYS_DIV_SELECT;
 
-		return infreq * (div >> 1);
+		return (infreq * div) >> 1;
 	case PLL_BUS:
 		div = __raw_readl(&imx_ccm->analog_pll_528);
 		div &= BM_ANADIG_PLL_528_DIV_SELECT;
@@ -94,11 +95,37 @@ static u32 decode_pll(enum pll_clocks pll, u32 infreq)
 		div = __raw_readl(&imx_ccm->analog_pll_enet);
 		div &= BM_ANADIG_PLL_ENET_DIV_SELECT;
 
-		return (div == 3 ? 125000000 : 25000000 * (div << 1));
+		return 25000000 * (div + (div >> 1) + 1);
 	default:
 		return 0;
 	}
 	/* NOTREACHED */
+}
+static u32 mxc_get_pll_pfd(enum pll_clocks pll, int pfd_num)
+{
+	u32 div;
+	u64 freq;
+
+	switch (pll) {
+	case PLL_BUS:
+		if (pfd_num == 3) {
+			/* No PFD3 on PPL2 */
+			return 0;
+		}
+		div = __raw_readl(&imx_ccm->analog_pfd_528);
+		freq = (u64)decode_pll(PLL_BUS, MXC_HCLK);
+		break;
+	case PLL_USBOTG:
+		div = __raw_readl(&imx_ccm->analog_pfd_480);
+		freq = (u64)decode_pll(PLL_USBOTG, MXC_HCLK);
+		break;
+	default:
+		/* No PFD on other PLL					     */
+		return 0;
+	}
+
+	return lldiv(freq * 18, (div & ANATOP_PFD_FRAC_MASK(pfd_num)) >>
+			      ANATOP_PFD_FRAC_SHIFT(pfd_num));
 }
 
 static u32 get_mcu_main_clk(void)
@@ -144,13 +171,14 @@ u32 get_periph_clk(void)
 			freq = decode_pll(PLL_BUS, MXC_HCLK);
 			break;
 		case 1:
-			freq = PLL2_PFD2_FREQ;
+			freq = mxc_get_pll_pfd(PLL_BUS, 2);
 			break;
 		case 2:
-			freq = PLL2_PFD0_FREQ;
+			freq = mxc_get_pll_pfd(PLL_BUS, 0);
 			break;
 		case 3:
-			freq = PLL2_PFD2_DIV_FREQ;
+			/* static / 2 divider */
+			freq = mxc_get_pll_pfd(PLL_BUS, 2) / 2;
 			break;
 		default:
 			break;
@@ -184,7 +212,7 @@ static u32 get_ipg_per_clk(void)
 static u32 get_uart_clk(void)
 {
 	u32 reg, uart_podf;
-	u32 freq = PLL3_80M;
+	u32 freq = decode_pll(PLL_USBOTG, MXC_HCLK) / 6; /* static divider */
 	reg = __raw_readl(&imx_ccm->cscdr1);
 #ifdef CONFIG_MX6SL
 	if (reg & MXC_CCM_CSCDR1_UART_CLK_SEL)
@@ -204,7 +232,7 @@ static u32 get_cspi_clk(void)
 	reg &= MXC_CCM_CSCDR2_ECSPI_CLK_PODF_MASK;
 	cspi_podf = reg >> MXC_CCM_CSCDR2_ECSPI_CLK_PODF_OFFSET;
 
-	return	PLL3_60M / (cspi_podf + 1);
+	return	decode_pll(PLL_USBOTG, MXC_HCLK) / (8 * (cspi_podf + 1));
 }
 
 static u32 get_axi_clk(void)
@@ -217,9 +245,9 @@ static u32 get_axi_clk(void)
 
 	if (cbcdr & MXC_CCM_CBCDR_AXI_SEL) {
 		if (cbcdr & MXC_CCM_CBCDR_AXI_ALT_SEL)
-			root_freq = PLL2_PFD2_FREQ;
+			root_freq = mxc_get_pll_pfd(PLL_BUS, 2);
 		else
-			root_freq = PLL3_PFD1_FREQ;
+			root_freq = mxc_get_pll_pfd(PLL_USBOTG, 1);
 	} else
 		root_freq = get_periph_clk();
 
@@ -244,10 +272,10 @@ static u32 get_emi_slow_clk(void)
 		root_freq = decode_pll(PLL_USBOTG, MXC_HCLK);
 		break;
 	case 2:
-		root_freq = PLL2_PFD2_FREQ;
+		root_freq =  mxc_get_pll_pfd(PLL_BUS, 2);
 		break;
 	case 3:
-		root_freq = PLL2_PFD0_FREQ;
+		root_freq =  mxc_get_pll_pfd(PLL_BUS, 0);
 		break;
 	}
 
@@ -270,20 +298,32 @@ static u32 get_mmdc_ch0_clk(void)
 		freq = decode_pll(PLL_BUS, MXC_HCLK);
 		break;
 	case 1:
-		freq = PLL2_PFD2_FREQ;
+		freq = mxc_get_pll_pfd(PLL_BUS, 2);
 		break;
 	case 2:
-		freq = PLL2_PFD0_FREQ;
+		freq = mxc_get_pll_pfd(PLL_BUS, 0);
 		break;
 	case 3:
-		freq = PLL2_PFD2_DIV_FREQ;
+		/* static / 2 divider */
+		freq =  mxc_get_pll_pfd(PLL_BUS, 2) / 2;
 	}
 
 	return freq / (podf + 1);
 
 }
+#else
+static u32 get_mmdc_ch0_clk(void)
+{
+	u32 cbcdr = __raw_readl(&imx_ccm->cbcdr);
+	u32 mmdc_ch0_podf = (cbcdr & MXC_CCM_CBCDR_MMDC_CH0_PODF_MASK) >>
+				MXC_CCM_CBCDR_MMDC_CH0_PODF_OFFSET;
 
-int enable_fec_anatop_clock(void)
+	return get_periph_clk() / (mmdc_ch0_podf + 1);
+}
+#endif
+
+#ifdef CONFIG_FEC_MXC
+int enable_fec_anatop_clock(enum enet_freq freq)
 {
 	u32 reg = 0;
 	s32 timeout = 100000;
@@ -291,7 +331,13 @@ int enable_fec_anatop_clock(void)
 	struct anatop_regs __iomem *anatop =
 		(struct anatop_regs __iomem *)ANATOP_BASE_ADDR;
 
+	if (freq < ENET_25MHz || freq > ENET_125MHz)
+		return -EINVAL;
+
 	reg = readl(&anatop->pll_enet);
+	reg &= ~BM_ANADIG_PLL_ENET_DIV_SELECT;
+	reg |= freq;
+
 	if ((reg & BM_ANADIG_PLL_ENET_POWERDOWN) ||
 	    (!(reg & BM_ANADIG_PLL_ENET_LOCK))) {
 		reg &= ~BM_ANADIG_PLL_ENET_POWERDOWN;
@@ -310,16 +356,6 @@ int enable_fec_anatop_clock(void)
 	writel(reg, &anatop->pll_enet);
 
 	return 0;
-}
-
-#else
-static u32 get_mmdc_ch0_clk(void)
-{
-	u32 cbcdr = __raw_readl(&imx_ccm->cbcdr);
-	u32 mmdc_ch0_podf = (cbcdr & MXC_CCM_CBCDR_MMDC_CH0_PODF_MASK) >>
-				MXC_CCM_CBCDR_MMDC_CH0_PODF_OFFSET;
-
-	return get_periph_clk() / (mmdc_ch0_podf + 1);
 }
 #endif
 
@@ -359,9 +395,9 @@ static u32 get_usdhc_clk(u32 port)
 	}
 
 	if (clk_sel)
-		root_freq = PLL2_PFD0_FREQ;
+		root_freq = mxc_get_pll_pfd(PLL_BUS, 0);
 	else
-		root_freq = PLL2_PFD2_FREQ;
+		root_freq = mxc_get_pll_pfd(PLL_BUS, 2);
 
 	return root_freq / (usdhc_podf + 1);
 }
@@ -373,20 +409,15 @@ u32 imx_get_uartclk(void)
 
 u32 imx_get_fecclk(void)
 {
-	return decode_pll(PLL_ENET, MXC_HCLK);
+	return mxc_get_clock(MXC_IPG_CLK);
 }
 
-int enable_sata_clock(void)
+static int enable_enet_pll(uint32_t en)
 {
-	u32 reg = 0;
-	s32 timeout = 100000;
 	struct mxc_ccm_reg *const imx_ccm
 		= (struct mxc_ccm_reg *) CCM_BASE_ADDR;
-
-	/* Enable sata clock */
-	reg = readl(&imx_ccm->CCGR5); /* CCGR5 */
-	reg |= MXC_CCM_CCGR5_SATA_MASK;
-	writel(reg, &imx_ccm->CCGR5);
+	s32 timeout = 100000;
+	u32 reg = 0;
 
 	/* Enable PLLs */
 	reg = readl(&imx_ccm->analog_pll_enet);
@@ -401,10 +432,70 @@ int enable_sata_clock(void)
 		return -EIO;
 	reg &= ~BM_ANADIG_PLL_SYS_BYPASS;
 	writel(reg, &imx_ccm->analog_pll_enet);
-	reg |= BM_ANADIG_PLL_ENET_ENABLE_SATA;
+	reg |= en;
 	writel(reg, &imx_ccm->analog_pll_enet);
+	return 0;
+}
 
-	return 0 ;
+static void ungate_sata_clock(void)
+{
+	struct mxc_ccm_reg *const imx_ccm =
+		(struct mxc_ccm_reg *)CCM_BASE_ADDR;
+
+	/* Enable SATA clock. */
+	setbits_le32(&imx_ccm->CCGR5, MXC_CCM_CCGR5_SATA_MASK);
+}
+
+static void ungate_pcie_clock(void)
+{
+	struct mxc_ccm_reg *const imx_ccm =
+		(struct mxc_ccm_reg *)CCM_BASE_ADDR;
+
+	/* Enable PCIe clock. */
+	setbits_le32(&imx_ccm->CCGR4, MXC_CCM_CCGR4_PCIE_MASK);
+}
+
+int enable_sata_clock(void)
+{
+	ungate_sata_clock();
+	return enable_enet_pll(BM_ANADIG_PLL_ENET_ENABLE_SATA);
+}
+
+int enable_pcie_clock(void)
+{
+	struct anatop_regs *anatop_regs =
+		(struct anatop_regs *)ANATOP_BASE_ADDR;
+	struct mxc_ccm_reg *ccm_regs = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
+
+	/*
+	 * Here be dragons!
+	 *
+	 * The register ANATOP_MISC1 is not documented in the Freescale
+	 * MX6RM. The register that is mapped in the ANATOP space and
+	 * marked as ANATOP_MISC1 is actually documented in the PMU section
+	 * of the datasheet as PMU_MISC1.
+	 *
+	 * Switch LVDS clock source to SATA (0xb), disable clock INPUT and
+	 * enable clock OUTPUT. This is important for PCI express link that
+	 * is clocked from the i.MX6.
+	 */
+#define ANADIG_ANA_MISC1_LVDSCLK1_IBEN		(1 << 12)
+#define ANADIG_ANA_MISC1_LVDSCLK1_OBEN		(1 << 10)
+#define ANADIG_ANA_MISC1_LVDS1_CLK_SEL_MASK	0x0000001F
+	clrsetbits_le32(&anatop_regs->ana_misc1,
+			ANADIG_ANA_MISC1_LVDSCLK1_IBEN |
+			ANADIG_ANA_MISC1_LVDS1_CLK_SEL_MASK,
+			ANADIG_ANA_MISC1_LVDSCLK1_OBEN | 0xb);
+
+	/* PCIe reference clock sourced from AXI. */
+	clrbits_le32(&ccm_regs->cbcmr, MXC_CCM_CBCMR_PCIE_AXI_CLK_SEL);
+
+	/* Party time! Ungate the clock to the PCIe. */
+	ungate_sata_clock();
+	ungate_pcie_clock();
+
+	return enable_enet_pll(BM_ANADIG_PLL_ENET_ENABLE_SATA |
+			       BM_ANADIG_PLL_ENET_ENABLE_PCIE);
 }
 
 unsigned int mxc_get_clock(enum mxc_clock clk)

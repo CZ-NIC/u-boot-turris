@@ -21,6 +21,10 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int dram_init(void)
 {
+#ifndef CONFIG_SKIP_LOWLEVEL_INIT
+	sdram_init();
+#endif
+
 	/* dram_init must store complete ramsize in gd->ram_size */
 	gd->ram_size = get_ram_size(
 			(void *)CONFIG_SYS_SDRAM_BASE,
@@ -35,7 +39,7 @@ void dram_init_banksize(void)
 }
 
 
-#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_NOR_BOOT)
+#ifndef CONFIG_SKIP_LOWLEVEL_INIT
 #ifdef CONFIG_TI81XX
 static struct dmm_lisa_map_regs *hw_lisa_map_regs =
 				(struct dmm_lisa_map_regs *)DMM_BASE;
@@ -47,6 +51,11 @@ static struct vtp_reg *vtpreg[2] = {
 #endif
 #ifdef CONFIG_AM33XX
 static struct ddr_ctrl *ddrctrl = (struct ddr_ctrl *)DDR_CTRL_ADDR;
+#endif
+#ifdef CONFIG_AM43XX
+static struct ddr_ctrl *ddrctrl = (struct ddr_ctrl *)DDR_CTRL_ADDR;
+static struct cm_device_inst *cm_device =
+				(struct cm_device_inst *)CM_DEVICE_INST;
 #endif
 
 #ifdef CONFIG_TI81XX
@@ -87,7 +96,7 @@ void __weak ddr_pll_config(unsigned int ddrpll_m)
 {
 }
 
-void config_ddr(unsigned int pll, unsigned int ioctrl,
+void config_ddr(unsigned int pll, const struct ctrl_ioregs *ioregs,
 		const struct ddr_data *data, const struct cmd_control *ctrl,
 		const struct emif_regs *regs, int nr)
 {
@@ -99,7 +108,18 @@ void config_ddr(unsigned int pll, unsigned int ioctrl,
 
 	config_ddr_data(data, nr);
 #ifdef CONFIG_AM33XX
-	config_io_ctrl(ioctrl);
+	config_io_ctrl(ioregs);
+
+	/* Set CKE to be controlled by EMIF/DDR PHY */
+	writel(DDR_CKE_CTRL_NORMAL, &ddrctrl->ddrckectrl);
+#endif
+#ifdef CONFIG_AM43XX
+	writel(readl(&cm_device->cm_dll_ctrl) & ~0x1, &cm_device->cm_dll_ctrl);
+	while ((readl(&cm_device->cm_dll_ctrl) & CM_DLL_READYST) == 0)
+		;
+	writel(0x80000000, &ddrctrl->ddrioctrl);
+
+	config_io_ctrl(ioregs);
 
 	/* Set CKE to be controlled by EMIF/DDR PHY */
 	writel(DDR_CKE_CTRL_NORMAL, &ddrctrl->ddrckectrl);
@@ -108,6 +128,9 @@ void config_ddr(unsigned int pll, unsigned int ioctrl,
 	/* Program EMIF instance */
 	config_ddr_phy(regs, nr);
 	set_sdram_timings(regs, nr);
-	config_sdram(regs, nr);
+	if (get_emif_rev(EMIF1_BASE) == EMIF_4D5)
+		config_sdram_emif4d5(regs, nr);
+	else
+		config_sdram(regs, nr);
 }
 #endif

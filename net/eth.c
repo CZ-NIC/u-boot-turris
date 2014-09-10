@@ -63,28 +63,6 @@ static int eth_mac_skip(int index)
 	return ((skip_state = getenv(enetvar)) != NULL);
 }
 
-#ifdef CONFIG_RANDOM_MACADDR
-void eth_random_enetaddr(uchar *enetaddr)
-{
-	uint32_t rval;
-
-	srand(get_timer(0));
-
-	rval = rand();
-	enetaddr[0] = rval & 0xff;
-	enetaddr[1] = (rval >> 8) & 0xff;
-	enetaddr[2] = (rval >> 16) & 0xff;
-
-	rval = rand();
-	enetaddr[3] = rval & 0xff;
-	enetaddr[4] = (rval >> 8) & 0xff;
-	enetaddr[5] = (rval >> 16) & 0xff;
-
-	/* make sure it's local and unicast */
-	enetaddr[0] = (enetaddr[0] | 0x02) & ~0x01;
-}
-#endif
-
 /*
  * CPU and board-specific Ethernet initializations.  Aliased function
  * signals caller to move on
@@ -279,7 +257,7 @@ int eth_initialize(bd_t *bis)
 	eth_current = NULL;
 
 	bootstage_mark(BOOTSTAGE_ID_NET_ETH_START);
-#if defined(CONFIG_MII) || defined(CONFIG_CMD_MII)
+#if defined(CONFIG_MII) || defined(CONFIG_CMD_MII) || defined(CONFIG_PHYLIB)
 	miiphy_init();
 #endif
 

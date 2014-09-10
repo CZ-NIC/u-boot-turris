@@ -43,6 +43,9 @@ struct mmc_internal_data {
 	unsigned int lba_size;
 	unsigned int lba_blk_size;
 
+	/* eMMC HW partition access */
+	int hw_partition;
+
 	/* FAT/EXT */
 	unsigned int dev;
 	unsigned int part;
@@ -64,11 +67,6 @@ struct ram_internal_data {
 	unsigned int	size;
 };
 
-static inline unsigned int get_mmc_blk_size(int dev)
-{
-	return find_mmc_device(dev)->read_bl_len;
-}
-
 #define DFU_NAME_SIZE			32
 #define DFU_CMD_BUF_SIZE		128
 #ifndef CONFIG_SYS_DFU_DATA_BUF_SIZE
@@ -76,6 +74,12 @@ static inline unsigned int get_mmc_blk_size(int dev)
 #endif
 #ifndef CONFIG_SYS_DFU_MAX_FILE_SIZE
 #define CONFIG_SYS_DFU_MAX_FILE_SIZE CONFIG_SYS_DFU_DATA_BUF_SIZE
+#endif
+#ifndef DFU_DEFAULT_POLL_TIMEOUT
+#define DFU_DEFAULT_POLL_TIMEOUT 0
+#endif
+#ifndef DFU_MANIFEST_POLL_TIMEOUT
+#define DFU_MANIFEST_POLL_TIMEOUT	DFU_DEFAULT_POLL_TIMEOUT
 #endif
 
 struct dfu_entity {
@@ -99,6 +103,7 @@ struct dfu_entity {
 			u64 offset, void *buf, long *len);
 
 	int (*flush_medium)(struct dfu_entity *dfu);
+	unsigned int (*poll_timeout)(struct dfu_entity *dfu);
 
 	struct list_head list;
 
@@ -126,11 +131,16 @@ const char *dfu_get_layout(enum dfu_layout l);
 struct dfu_entity *dfu_get_entity(int alt);
 char *dfu_extract_token(char** e, int *n);
 void dfu_trigger_reset(void);
+int dfu_get_alt(char *name);
 bool dfu_reset(void);
 int dfu_init_env_entities(char *interface, int dev);
+unsigned char *dfu_get_buf(void);
+unsigned char *dfu_free_buf(void);
+unsigned long dfu_get_buf_size(void);
 
 int dfu_read(struct dfu_entity *de, void *buf, int size, int blk_seq_num);
 int dfu_write(struct dfu_entity *de, void *buf, int size, int blk_seq_num);
+int dfu_flush(struct dfu_entity *de, void *buf, int size, int blk_seq_num);
 /* Device specific */
 #ifdef CONFIG_DFU_MMC
 extern int dfu_fill_entity_mmc(struct dfu_entity *dfu, char *s);
@@ -162,12 +172,5 @@ static inline int dfu_fill_entity_ram(struct dfu_entity *dfu, char *s)
 }
 #endif
 
-#ifdef CONFIG_DFU_FUNCTION
 int dfu_add(struct usb_configuration *c);
-#else
-int dfu_add(struct usb_configuration *c)
-{
-	return 0;
-}
-#endif
 #endif /* __DFU_ENTITY_H_ */

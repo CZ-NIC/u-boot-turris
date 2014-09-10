@@ -6,15 +6,15 @@
  */
 
 #include <common.h>
-#include <board/cogent/dipsw.h>
-#include <board/cogent/lcd.h>
-#include <board/cogent/rtc.h>
-#include <board/cogent/par.h>
-#include <board/cogent/pci.h>
+#include "dipsw.h"
+#include "lcd.h"
+#include "rtc.h"
+#include "par.h"
+#include "pci.h"
 
 /* ------------------------------------------------------------------------- */
 
-#if defined(CONFIG_8260)
+#if defined(CONFIG_MPC8260)
 
 #include <ioports.h>
 
@@ -186,7 +186,7 @@ const iop_conf_t iop_conf_tab[4][32] = {
 	 }
 };
 
-#endif /* CONFIG_8260 */
+#endif /* CONFIG_MPC8260 */
 
 /* ------------------------------------------------------------------------- */
 

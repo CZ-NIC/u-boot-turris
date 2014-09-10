@@ -34,8 +34,8 @@
 #include <linux/string.h>
 #include <malloc.h>
 
-static void *SzAlloc(void *p, size_t size) { p = p; return malloc(size); }
-static void SzFree(void *p, void *address) { p = p; free(address); }
+static void *SzAlloc(void *p, size_t size) { return malloc(size); }
+static void SzFree(void *p, void *address) { free(address); }
 
 int lzmaBuffToBuffDecompress (unsigned char *outStream, SizeT *uncompressedSize,
                   unsigned char *inStream,  SizeT  length)
@@ -102,7 +102,7 @@ int lzmaBuffToBuffDecompress (unsigned char *outStream, SizeT *uncompressedSize,
         return SZ_ERROR_OUTPUT_EOF;
 
     /* Decompress */
-    outProcessed = *uncompressedSize;
+    outProcessed = outSizeFull;
 
     WATCHDOG_RESET();
 
@@ -111,6 +111,9 @@ int lzmaBuffToBuffDecompress (unsigned char *outStream, SizeT *uncompressedSize,
         inStream + LZMA_DATA_OFFSET, &compressedSize,
         inStream, LZMA_PROPS_SIZE, LZMA_FINISH_END, &state, &g_Alloc);
     *uncompressedSize = outProcessed;
+
+    debug("LZMA: Uncompresed ................ 0x%zx\n", outProcessed);
+
     if (res != SZ_OK)  {
         return res;
     }

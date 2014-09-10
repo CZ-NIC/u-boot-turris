@@ -27,70 +27,6 @@
 /*
  *************************************************************************
  *
- * Jump vector table as in table 3.1 in [1]
- *
- *************************************************************************
- */
-
-
-.globl _start
-_start:
-	b	reset
-	b	undefined_instruction
-	b	software_interrupt
-	b	prefetch_abort
-	b	data_abort
-	b	not_used
-	b	irq
-	b	fiq
-
-/*
- * Vector table, located at address 0x20.
- * This table allows the code running AFTER SPL, the U-Boot, to install it's
- * interrupt handlers here. The problem is that the U-Boot is loaded into RAM,
- * including it's interrupt vectoring table and the table at 0x0 is still the
- * SPLs. So if interrupt happens in U-Boot, the SPLs interrupt vectoring table
- * is still used.
- */
-_vt_reset:
-	.word	_reset
-_vt_undefined_instruction:
-	.word	_hang
-_vt_software_interrupt:
-	.word	_hang
-_vt_prefetch_abort:
-	.word	_hang
-_vt_data_abort:
-	.word	_hang
-_vt_not_used:
-	.word	_reset
-_vt_irq:
-	.word	_hang
-_vt_fiq:
-	.word	_hang
-
-reset:
-	ldr	pc, _vt_reset
-undefined_instruction:
-	ldr	pc, _vt_undefined_instruction
-software_interrupt:
-	ldr	pc, _vt_software_interrupt
-prefetch_abort:
-	ldr	pc, _vt_prefetch_abort
-data_abort:
-	ldr	pc, _vt_data_abort
-not_used:
-	ldr	pc, _vt_not_used
-irq:
-	ldr	pc, _vt_irq
-fiq:
-	ldr	pc, _vt_fiq
-
-	.balignl 16,0xdeadbeef
-
-/*
- *************************************************************************
- *
  * Startup Code (reset vector)
  *
  * do important init only if we don't start from memory!
@@ -101,54 +37,17 @@ fiq:
  *************************************************************************
  */
 
-.globl _TEXT_BASE
-_TEXT_BASE:
-#ifdef CONFIG_SPL_TEXT_BASE
-	.word	CONFIG_SPL_TEXT_BASE
-#else
-	.word	CONFIG_SYS_TEXT_BASE
-#endif
+	.globl	reset
+reset:
+	/*
+	 * If the CPU is configured in "Wait JTAG connection mode", the stack
+	 * pointer is not configured and is zero. This will cause crash when
+	 * trying to push data onto stack right below here. Load the SP and make
+	 * it point to the end of OCRAM if the SP is zero.
+	 */
+	cmp	sp, #0x00000000
+	ldreq	sp, =CONFIG_SYS_INIT_SP_ADDR
 
-/*
- * These are defined in the board-specific linker script.
- * Subtracting _start from them lets the linker put their
- * relative position in the executable instead of leaving
- * them null.
- */
-.globl _bss_start_ofs
-_bss_start_ofs:
-	.word __bss_start - _start
-
-.globl _bss_end_ofs
-_bss_end_ofs:
-	.word __bss_end - _start
-
-.globl _end_ofs
-_end_ofs:
-	.word _end - _start
-
-#ifdef CONFIG_USE_IRQ
-/* IRQ stack memory (calculated at run-time) */
-.globl IRQ_STACK_START
-IRQ_STACK_START:
-	.word	0x0badc0de
-
-/* IRQ stack memory (calculated at run-time) */
-.globl FIQ_STACK_START
-FIQ_STACK_START:
-	.word 0x0badc0de
-#endif
-
-/* IRQ stack memory (calculated at run-time) + 8 bytes */
-.globl IRQ_STACK_START_IN
-IRQ_STACK_START_IN:
-	.word	0x0badc0de
-
-/*
- * the actual reset code
- */
-
-_reset:
 	/*
 	 * Store all registers on old stack pointer, this will allow us later to
 	 * return to the BootROM and let the BootROM load U-Boot into RAM.
@@ -196,8 +95,3 @@ _reset:
 	mov r0, #0
 
 	bx	lr
-
-_hang:
-	ldr	sp, _TEXT_BASE			/* switch to abort stack */
-1:
-	bl	1b				/* hang and never return */

@@ -88,7 +88,7 @@
 #define CONFIG_ROOTPATH		"/romfs"
 /* Uncomment next line to use fixed MAC address */
 /* #define CONFIG_ETHADDR	02:80:ad:20:31:42 */
-
+#define CONFIG_LIB_RAND
 
 /*
  * Flash Settings
@@ -136,6 +136,7 @@
 
 #define CONFIG_BAUDRATE		115200
 #define CONFIG_UART_CONSOLE	0
+#define CONFIG_BFIN_SERIAL
 
 #define CONFIG_PANIC_HANG	1
 #define CONFIG_RTC_BFIN		1

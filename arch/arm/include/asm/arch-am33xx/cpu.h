@@ -26,7 +26,17 @@
 #define TCLR_PRE			BIT(5)	/* Pre-scaler enable */
 #define TCLR_PTV_SHIFT			(2)	/* Pre-scaler shift value */
 #define TCLR_PRE_DISABLE		CL_BIT(5) /* Pre-scalar disable */
+#define TCLR_CE				BIT(6)	/* compare mode enable */
+#define TCLR_SCPWM			BIT(7)	/* pwm outpin behaviour */
+#define TCLR_TCM			BIT(8)	/* edge detection of input pin*/
+#define TCLR_TRG_SHIFT			(10)	/* trigmode on pwm outpin */
+#define TCLR_PT				BIT(12)	/* pulse/toggle mode of outpin*/
+#define TCLR_CAPTMODE			BIT(13) /* capture mode */
+#define TCLR_GPOCFG			BIT(14)	/* 0=output,1=input */
 
+#define TCFG_RESET			BIT(0)	/* software reset */
+#define TCFG_EMUFREE			BIT(1)	/* behaviour of tmr on debug */
+#define TCFG_IDLEMOD_SHIFT		(2)	/* power management */
 /* device type */
 #define DEVICE_MASK			(BIT(8) | BIT(9) | BIT(10))
 #define TST_DEVICE			0x0
@@ -78,58 +88,7 @@
 
 #ifndef __KERNEL_STRICT_NAMES
 #ifndef __ASSEMBLY__
-struct gpmc_cs {
-	u32 config1;		/* 0x00 */
-	u32 config2;		/* 0x04 */
-	u32 config3;		/* 0x08 */
-	u32 config4;		/* 0x0C */
-	u32 config5;		/* 0x10 */
-	u32 config6;		/* 0x14 */
-	u32 config7;		/* 0x18 */
-	u32 nand_cmd;		/* 0x1C */
-	u32 nand_adr;		/* 0x20 */
-	u32 nand_dat;		/* 0x24 */
-	u8 res[8];		/* blow up to 0x30 byte */
-};
 
-struct bch_res_0_3 {
-	u32 bch_result_x[4];
-};
-
-struct gpmc {
-	u8 res1[0x10];
-	u32 sysconfig;		/* 0x10 */
-	u8 res2[0x4];
-	u32 irqstatus;		/* 0x18 */
-	u32 irqenable;		/* 0x1C */
-	u8 res3[0x20];
-	u32 timeout_control;	/* 0x40 */
-	u8 res4[0xC];
-	u32 config;		/* 0x50 */
-	u32 status;		/* 0x54 */
-	u8 res5[0x8];		/* 0x58 */
-	struct gpmc_cs cs[8];	/* 0x60, 0x90, .. */
-	u8 res6[0x14];		/* 0x1E0 */
-	u32 ecc_config;		/* 0x1F4 */
-	u32 ecc_control;	/* 0x1F8 */
-	u32 ecc_size_config;	/* 0x1FC */
-	u32 ecc1_result;	/* 0x200 */
-	u32 ecc2_result;	/* 0x204 */
-	u32 ecc3_result;	/* 0x208 */
-	u32 ecc4_result;	/* 0x20C */
-	u32 ecc5_result;	/* 0x210 */
-	u32 ecc6_result;	/* 0x214 */
-	u32 ecc7_result;	/* 0x218 */
-	u32 ecc8_result;	/* 0x21C */
-	u32 ecc9_result;	/* 0x220 */
-	u8 res7[12];		/* 0x224 */
-	u32 testmomde_ctrl;	/* 0x230 */
-	u8 res8[12];		/* 0x234 */
-	struct bch_res_0_3 bch_result_0_3[2];	/* 0x240 */
-};
-
-/* Used for board specific gpmc initialization */
-extern struct gpmc *gpmc_cfg;
 
 #ifndef CONFIG_AM43XX
 /* Encapsulating core pll registers */
@@ -138,7 +97,8 @@ struct cm_wkuppll {
 	unsigned int wkctrlclkctrl;	/* offset 0x04 */
 	unsigned int wkgpio0clkctrl;	/* offset 0x08 */
 	unsigned int wkl4wkclkctrl;	/* offset 0x0c */
-	unsigned int resv2[4];
+	unsigned int timer0clkctrl;	/* offset 0x10 */
+	unsigned int resv2[3];
 	unsigned int idlestdpllmpu;	/* offset 0x20 */
 	unsigned int resv3[2];
 	unsigned int clkseldpllmpu;	/* offset 0x2c */
@@ -171,7 +131,10 @@ struct cm_wkuppll {
 	unsigned int resv11[1];
 	unsigned int wkup_uart0ctrl;	/* offset 0xB4 */
 	unsigned int wkup_i2c0ctrl;	/* offset 0xB8 */
-	unsigned int resv12[7];
+	unsigned int wkup_adctscctrl;	/* offset 0xBC */
+	unsigned int resv12;
+	unsigned int timer1clkctrl;	/* offset 0xC4 */
+	unsigned int resv13[4];
 	unsigned int divm6dpllcore;	/* offset 0xD8 */
 };
 
@@ -221,13 +184,16 @@ struct cm_perpll {
 	unsigned int tpccclkctrl;	/* offset 0xBC */
 	unsigned int dcan0clkctrl;	/* offset 0xC0 */
 	unsigned int dcan1clkctrl;	/* offset 0xC4 */
-	unsigned int resv6[2];
+	unsigned int resv6;
+	unsigned int epwmss1clkctrl;	/* offset 0xCC */
 	unsigned int emiffwclkctrl;	/* offset 0xD0 */
 	unsigned int epwmss0clkctrl;	/* offset 0xD4 */
 	unsigned int epwmss2clkctrl;	/* offset 0xD8 */
 	unsigned int l3instrclkctrl;	/* offset 0xDC */
 	unsigned int l3clkctrl;		/* Offset 0xE0 */
-	unsigned int resv8[4];
+	unsigned int resv8[2];
+	unsigned int timer5clkctrl;	/* offset 0xEC */
+	unsigned int timer6clkctrl;	/* offset 0xF0 */
 	unsigned int mmc1clkctrl;	/* offset 0xF4 */
 	unsigned int mmc2clkctrl;	/* offset 0xF8 */
 	unsigned int resv9[8];
@@ -236,6 +202,22 @@ struct cm_perpll {
 	unsigned int resv10[8];
 	unsigned int cpswclkstctrl;	/* offset 0x144 */
 	unsigned int lcdcclkstctrl;	/* offset 0x148 */
+};
+
+/* Encapsulating Display pll registers */
+struct cm_dpll {
+	unsigned int resv1;
+	unsigned int clktimer7clk;	/* offset 0x04 */
+	unsigned int clktimer2clk;	/* offset 0x08 */
+	unsigned int clktimer3clk;	/* offset 0x0C */
+	unsigned int clktimer4clk;	/* offset 0x10 */
+	unsigned int resv2;
+	unsigned int clktimer5clk;	/* offset 0x18 */
+	unsigned int clktimer6clk;	/* offset 0x1C */
+	unsigned int resv3[2];
+	unsigned int clktimer1clk;	/* offset 0x28 */
+	unsigned int resv4[2];
+	unsigned int clklcdcpixelclk;	/* offset 0x34 */
 };
 #else
 /* Encapsulating core pll registers */
@@ -324,7 +306,9 @@ struct cm_perpll {
 	unsigned int mcasp1clkctrl;	/* offset 0x240 */
 	unsigned int resv11;
 	unsigned int mmc2clkctrl;	/* offset 0x248 */
-	unsigned int resv12[5];
+	unsigned int resv12[3];
+	unsigned int qspiclkctrl;       /* offset 0x258 */
+	unsigned int resv121;
 	unsigned int usb0clkctrl;	/* offset 0x260 */
 	unsigned int resv13[103];
 	unsigned int l4lsclkstctrl;	/* offset 0x400 */
@@ -343,7 +327,11 @@ struct cm_perpll {
 	unsigned int gpio2clkctrl;	/* offset 0x480 */
 	unsigned int resv20;
 	unsigned int gpio3clkctrl;	/* offset 0x488 */
-	unsigned int resv21[7];
+	unsigned int resv41;
+	unsigned int gpio4clkctrl;	/* offset 0x490 */
+	unsigned int resv42;
+	unsigned int gpio5clkctrl;	/* offset 0x498 */
+	unsigned int resv21[3];
 
 	unsigned int i2c1clkctrl;	/* offset 0x4A8 */
 	unsigned int resv22;
@@ -392,15 +380,17 @@ struct cm_perpll {
 	unsigned int resv40[7];
 	unsigned int cpgmac0clkctrl;	/* offset 0xB20 */
 };
-#endif /* CONFIG_AM43XX */
 
-/* Encapsulating Display pll registers */
-struct cm_dpll {
-	unsigned int resv1[2];
-	unsigned int clktimer2clk;	/* offset 0x08 */
-	unsigned int resv2[10];
-	unsigned int clklcdcpixelclk;	/* offset 0x34 */
+struct cm_device_inst {
+	unsigned int cm_clkout1_ctrl;
+	unsigned int cm_dll_ctrl;
 };
+
+struct cm_dpll {
+	unsigned int resv1;
+	unsigned int clktimer2clk;	/* offset 0x04 */
+};
+#endif /* CONFIG_AM43XX */
 
 /* Control Module RTC registers */
 struct cm_rtc {
@@ -457,15 +447,6 @@ struct gptimer {
 	unsigned int tcar2;		/* offset 0x58 */
 };
 
-/* RTC Registers */
-struct rtc_regs {
-	unsigned int res[21];
-	unsigned int osc;		/* offset 0x54 */
-	unsigned int res2[5];
-	unsigned int kick0r;		/* offset 0x6c */
-	unsigned int kick1r;		/* offset 0x70 */
-};
-
 /* UART Registers */
 struct uart_sys {
 	unsigned int resv1[21];
@@ -484,6 +465,8 @@ struct ctrl_stat {
 	unsigned int statusreg;		/* ofset 0x40 */
 	unsigned int resv2[51];
 	unsigned int secure_emif_sdram_config;	/* offset 0x0110 */
+	unsigned int resv3[319];
+	unsigned int dev_attr;
 };
 
 /* AM33XX GPIO registers */
@@ -506,6 +489,12 @@ struct ctrl_stat {
 #define OMAP_GPIO_SETDATAOUT		0x0194
 
 /* Control Device Register */
+
+ /* Control Device Register */
+#define MREQPRIO_0_SAB_INIT1_MASK	0xFFFFFF8F
+#define MREQPRIO_0_SAB_INIT0_MASK	0xFFFFFFF8
+#define MREQPRIO_1_DSS_MASK		0xFFFFFF8F
+
 struct ctrl_dev {
 	unsigned int deviceid;		/* offset 0x00 */
 	unsigned int resv1[7];
@@ -519,8 +508,23 @@ struct ctrl_dev {
 	unsigned int macid1h;		/* offset 0x3c */
 	unsigned int resv4[4];
 	unsigned int miisel;		/* offset 0x50 */
-	unsigned int resv5[106];
+	unsigned int resv5[7];
+	unsigned int mreqprio_0;	/* offset 0x70 */
+	unsigned int mreqprio_1;	/* offset 0x74 */
+	unsigned int resv6[97];
 	unsigned int efuse_sma;		/* offset 0x1FC */
+};
+
+/* Bandwidth Limiter Portion of the L3Fast Configuration Register */
+#define BW_LIMITER_BW_FRAC_MASK         0xFFFFFFE0
+#define BW_LIMITER_BW_INT_MASK          0xFFFFFFF0
+#define BW_LIMITER_BW_WATERMARK_MASK    0xFFFFF800
+
+struct l3f_cfg_bwlimiter {
+	u32 padding0[2];
+	u32 modena_init0_bw_fractional;
+	u32 modena_init0_bw_integer;
+	u32 modena_init0_watermark_0;
 };
 
 /* gmii_sel register defines */

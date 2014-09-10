@@ -20,8 +20,9 @@ SECTIONS
 	.text.0	:
 	{
 		arch/arm/cpu/pxa/start.o		(.text*)
-		board/vpac270/libvpac270.o		(.text*)
-		drivers/mtd/onenand/libonenand.o	(.text*)
+		arch/arm/lib/built-in.o			(.text*)
+		board/vpac270/built-in.o		(.text*)
+		drivers/mtd/onenand/built-in.o		(.text*)
 	}
 
 
@@ -53,7 +54,12 @@ SECTIONS
 
 	. = ALIGN(0x800);
 
-	_end = .;
+	.end :
+	{
+		*(.__end)
+	}
+
+	_image_binary_end = .;
 
 	.bss __rel_dyn_start (OVERLAY) : {
 		__bss_start = .;
@@ -62,13 +68,13 @@ SECTIONS
 		__bss_end = .;
 	}
 
-	/DISCARD/ : { *(.bss*) }
-	/DISCARD/ : { *(.dynsym) }
-	/DISCARD/ : { *(.dynstr*) }
-	/DISCARD/ : { *(.dynsym*) }
-	/DISCARD/ : { *(.dynamic*) }
-	/DISCARD/ : { *(.hash*) }
-	/DISCARD/ : { *(.plt*) }
-	/DISCARD/ : { *(.interp*) }
-	/DISCARD/ : { *(.gnu*) }
+	.dynsym _image_binary_end : { *(.dynsym) }
+	.dynbss : { *(.dynbss) }
+	.dynstr : { *(.dynstr*) }
+	.dynamic : { *(.dynamic*) }
+	.hash : { *(.hash*) }
+	.plt : { *(.plt*) }
+	.interp : { *(.interp*) }
+	.gnu : { *(.gnu*) }
+	.ARM.exidx : { *(.ARM.exidx*) }
 }

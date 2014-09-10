@@ -223,6 +223,8 @@ typedef struct vidinfo {
 	unsigned int logo_on;
 	unsigned int logo_width;
 	unsigned int logo_height;
+	int logo_x_offset;
+	int logo_y_offset;
 	unsigned long logo_addr;
 	unsigned int rgb_mode;
 	unsigned int resolution;
@@ -255,10 +257,6 @@ typedef struct vidinfo {
 extern vidinfo_t panel_info;
 
 /* Video functions */
-
-#if defined(CONFIG_RBC823)
-void	lcd_disable(void);
-#endif
 
 void	lcd_putc(const char c);
 void	lcd_puts(const char *s);
@@ -310,6 +308,9 @@ int lcd_get_size(int *line_length);
 
 int lcd_dt_simplefb_add_node(void *blob);
 int lcd_dt_simplefb_enable_existing_node(void *blob);
+
+/* Update the LCD / flush the cache */
+void lcd_sync(void);
 
 /************************************************************************/
 /* ** BITMAP DISPLAY SUPPORT						*/

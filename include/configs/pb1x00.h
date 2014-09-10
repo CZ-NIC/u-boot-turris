@@ -12,7 +12,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_MIPS32		1  /* MIPS32 CPU core	*/
 #define CONFIG_PB1X00		1
 #define CONFIG_SOC_AU1X00	1  /* alchemy series cpu */
 
@@ -65,8 +64,6 @@
 #define CONFIG_SYS_BOOTPARAMS_LEN	128*1024
 
 #define CONFIG_SYS_MIPS_TIMER_FREQ	396000000
-
-#define CONFIG_SYS_HZ			1000
 
 #define CONFIG_SYS_SDRAM_BASE		0x80000000     /* Cached addr */
 

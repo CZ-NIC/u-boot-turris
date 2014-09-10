@@ -19,9 +19,11 @@
 #include <net.h>
 #include <status_led.h>
 #include <version.h>
+#include <watchdog.h>
 
 #include <asm/cplb.h>
 #include <asm/mach-common/bits/mpu.h>
+#include <asm/clock.h>
 #include <kgdb.h>
 
 #ifdef CONFIG_CMD_NAND
@@ -67,7 +69,6 @@ static int display_banner(void)
 static int init_baudrate(void)
 {
 	gd->baudrate = getenv_ulong("baudrate", 10, CONFIG_BAUDRATE);
-	gd->bd->bi_baudrate = gd->baudrate;
 	return 0;
 }
 
@@ -90,7 +91,6 @@ static void display_global_data(void)
 	printf(" |-env_valid: %lx\n", gd->env_valid);
 	printf(" |-jt(%p): %p\n", gd->jt, *(gd->jt));
 	printf(" \\-bd: %p\n", gd->bd);
-	printf("   |-bi_baudrate: %x\n", bd->bi_baudrate);
 	printf("   |-bi_boot_params: %lx\n", bd->bi_boot_params);
 	printf("   |-bi_memstart: %lx\n", bd->bi_memstart);
 	printf("   |-bi_memsize: %lx\n", bd->bi_memsize);
@@ -141,7 +141,8 @@ void init_cplbtables(void)
 	++i;
 #if defined(__ADSPBF60x__)
 	icplb_add(0x0, 0x0);
-	dcplb_add(CONFIG_SYS_FLASH_BASE, SDRAM_EBIU);
+	dcplb_add(CONFIG_SYS_FLASH_BASE, PAGE_SIZE_16MB | CPLB_DIRTY |
+		CPLB_SUPV_WR | CPLB_USER_WR | CPLB_USER_RD | CPLB_VALID);
 	++i;
 #endif
 

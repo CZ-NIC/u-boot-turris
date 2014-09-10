@@ -11,7 +11,7 @@
 #define __CONFIG_H
 
 #ifndef CONFIG_SYS_TEXT_BASE
-#define CONFIG_SYS_TEXT_BASE	0xeff80000
+#define CONFIG_SYS_TEXT_BASE	0xeff40000
 #endif
 
 #ifndef CONFIG_SYS_MONITOR_BASE
@@ -25,7 +25,6 @@
 /* High Level Configuration Options */
 #define CONFIG_BOOKE		/* BOOKE */
 #define CONFIG_E500		/* BOOKE e500 family */
-#define CONFIG_MPC85xx
 #define CONFIG_P1023
 #define CONFIG_MP		/* support multiple processors */
 
@@ -74,7 +73,7 @@ extern unsigned long get_clock_freq(void);
 #define CONFIG_CHIP_SELECTS_PER_CTRL	1
 
 #define CONFIG_DDR_SPD
-#define CONFIG_FSL_DDR3
+#define CONFIG_SYS_FSL_DDR3
 #define CONFIG_FSL_DDR_INTERACTIVE
 #define CONFIG_SYS_SDRAM_SIZE		512u	/* DDR is 512M */
 #define CONFIG_SYS_SPD_BUS_NUM          0
@@ -126,7 +125,7 @@ extern unsigned long get_clock_freq(void);
 					GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_OFFSET	CONFIG_SYS_GBL_DATA_OFFSET
 
-#define CONFIG_SYS_MONITOR_LEN	(512 * 1024)	  /* Reserve 512 kB for Mon */
+#define CONFIG_SYS_MONITOR_LEN	(768 * 1024)	  /* Reserve 512 kB for Mon */
 #define CONFIG_SYS_MALLOC_LEN	(6 * 1024 * 1024) /* Reserved for malloc */
 
 #define CONFIG_SYS_NAND_BASE		0xffa00000
@@ -260,11 +259,7 @@ extern unsigned long get_clock_freq(void);
 #define CONFIG_ENV_OVERWRITE
 
 #define CONFIG_ENV_IS_IN_FLASH
-#if CONFIG_SYS_MONITOR_BASE > 0xfff80000
-#define CONFIG_ENV_ADDR		0xfff80000
-#else
 #define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE - CONFIG_ENV_SECT_SIZE)
-#endif
 #define CONFIG_ENV_SIZE		0x2000
 #define CONFIG_ENV_SECT_SIZE	0x20000 /* 128K (one sector) */
 
@@ -312,7 +307,6 @@ extern unsigned long get_clock_freq(void);
 #define CONFIG_SYS_LONGHELP			/* undef to save memory	*/
 #define CONFIG_CMDLINE_EDITING		/* Command-line editing */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
 #else
@@ -323,7 +317,6 @@ extern unsigned long get_clock_freq(void);
 #define CONFIG_SYS_MAXARGS	16		/* max number of command args */
 /* Boot Argument Buffer Size */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE
-#define CONFIG_SYS_HZ	1000		/* decrementer freq: 1ms ticks */
 
 /*
  * For booting Linux, the board info and command line data
@@ -367,7 +360,7 @@ extern unsigned long get_clock_freq(void);
 /* Default address of microcode for the Linux Fman driver */
 /* QE microcode/firmware address */
 #define CONFIG_SYS_QE_FMAN_FW_IN_NOR
-#define CONFIG_SYS_QE_FMAN_FW_ADDR	0xeff40000
+#define CONFIG_SYS_FMAN_FW_ADDR	0xEFF00000
 #define CONFIG_SYS_QE_FMAN_FW_LENGTH	0x10000
 #define CONFIG_SYS_FDT_PAD		(0x3000 + CONFIG_SYS_QE_FMAN_FW_LENGTH)
 

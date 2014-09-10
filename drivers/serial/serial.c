@@ -74,9 +74,6 @@ static int on_baudrate(const char *name, const char *value, enum env_op op,
 		}
 
 		gd->baudrate = baudrate;
-#if defined(CONFIG_PPC) || defined(CONFIG_MCF52x2)
-		gd->bd->bi_baudrate = baudrate;
-#endif
 
 		serial_setbrg();
 
@@ -117,7 +114,7 @@ serial_initfunc(ns16550_serial_initialize);
 serial_initfunc(pxa_serial_initialize);
 serial_initfunc(s3c24xx_serial_initialize);
 serial_initfunc(s5p_serial_initialize);
-serial_initfunc(zynq_serial_initalize);
+serial_initfunc(zynq_serial_initialize);
 serial_initfunc(bfin_serial_initialize);
 serial_initfunc(bfin_jtag_initialize);
 serial_initfunc(mpc512x_serial_initialize);
@@ -150,7 +147,6 @@ serial_initfunc(oc_serial_initialize);
 serial_initfunc(sandbox_serial_initialize);
 serial_initfunc(clps7111_serial_initialize);
 serial_initfunc(imx_serial_initialize);
-serial_initfunc(ixp_serial_initialize);
 serial_initfunc(ks8695_serial_initialize);
 serial_initfunc(lh7a40x_serial_initialize);
 serial_initfunc(max3100_serial_initialize);
@@ -160,6 +156,7 @@ serial_initfunc(sa1100_serial_initialize);
 serial_initfunc(sh_serial_initialize);
 serial_initfunc(arm_dcc_initialize);
 serial_initfunc(mxs_auart_initialize);
+serial_initfunc(arc_serial_initialize);
 
 /**
  * serial_register() - Register serial driver with serial driver core
@@ -214,7 +211,7 @@ void serial_initialize(void)
 	bfin_serial_initialize();
 	bfin_jtag_initialize();
 	uartlite_serial_initialize();
-	zynq_serial_initalize();
+	zynq_serial_initialize();
 	au1x00_serial_initialize();
 	asc_serial_initialize();
 	jz_serial_initialize();
@@ -243,7 +240,6 @@ void serial_initialize(void)
 	sandbox_serial_initialize();
 	clps7111_serial_initialize();
 	imx_serial_initialize();
-	ixp_serial_initialize();
 	ks8695_serial_initialize();
 	lh7a40x_serial_initialize();
 	max3100_serial_initialize();
@@ -253,6 +249,7 @@ void serial_initialize(void)
 	sh_serial_initialize();
 	arm_dcc_initialize();
 	mxs_auart_initialize();
+	arc_serial_initialize();
 
 	serial_assign(default_serial_console()->name);
 }
@@ -502,12 +499,11 @@ int uart_post_test(int flags)
 	unsigned char c;
 	int ret, saved_baud, b;
 	struct serial_device *saved_dev, *s;
-	bd_t *bd = gd->bd;
 
 	/* Save current serial state */
 	ret = 0;
 	saved_dev = serial_current;
-	saved_baud = bd->bi_baudrate;
+	saved_baud = gd->baudrate;
 
 	for (s = serial_devices; s; s = s->next) {
 		/* If this driver doesn't support loop back, skip it */
@@ -530,7 +526,7 @@ int uart_post_test(int flags)
 
 		/* Test every available baud rate */
 		for (b = 0; b < ARRAY_SIZE(bauds); ++b) {
-			bd->bi_baudrate = bauds[b];
+			gd->baudrate = bauds[b];
 			serial_setbrg();
 
 			/*
@@ -572,7 +568,7 @@ int uart_post_test(int flags)
  done:
 	/* Restore previous serial state */
 	serial_current = saved_dev;
-	bd->bi_baudrate = saved_baud;
+	gd->baudrate = saved_baud;
 	serial_reinit_all();
 	serial_setbrg();
 

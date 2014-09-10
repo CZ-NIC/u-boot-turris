@@ -25,7 +25,6 @@
  * (easy to change)
  */
 
-#define CONFIG_MPC824X		1
 #define CONFIG_MPC8245		1
 #define CONFIG_MUSENKI		1
 
@@ -56,7 +55,6 @@
  * Miscellaneous configurable options
  */
 #undef CONFIG_SYS_LONGHELP			/* undef to save memory		*/
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt	*/
 #define CONFIG_SYS_CBSIZE	256		/* Console I/O Buffer Size	*/
 
 /* Print Buffer Size
@@ -151,7 +149,6 @@
  */
 
 #define CONFIG_SYS_CLK_FREQ  33333333	/* external frequency to pll */
-#define CONFIG_SYS_HZ		     1000
 
 	/* Bit-field values for MCCR1.
 	 */

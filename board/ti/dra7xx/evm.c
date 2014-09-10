@@ -12,16 +12,13 @@
  */
 #include <common.h>
 #include <palmas.h>
+#include <sata.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/arch/mmc_host_def.h>
+#include <asm/arch/sata.h>
+#include <environment.h>
 
 #include "mux_data.h"
-
-#ifdef CONFIG_USB_EHCI
-#include <usb.h>
-#include <asm/arch/ehci.h>
-#include <asm/ehci-omap.h>
-#endif
 
 #ifdef CONFIG_DRIVER_TI_CPSW
 #include <cpsw.h>
@@ -83,6 +80,18 @@ int board_init(void)
 	return 0;
 }
 
+int board_late_init(void)
+{
+#ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
+	if (omap_revision() == DRA722_ES1_0)
+		setenv("board_name", "dra72x");
+	else
+		setenv("board_name", "dra7xx");
+#endif
+	init_sata(0);
+	return 0;
+}
+
 /**
  * @brief misc_init_r - Configure EVM board specific configurations
  * such as power configurations, ethernet initialization as phase2 of
@@ -122,6 +131,24 @@ int board_mmc_init(bd_t *bis)
 }
 #endif
 
+#if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_OS_BOOT)
+int spl_start_uboot(void)
+{
+	/* break into full u-boot on 'c' */
+	if (serial_tstc() && serial_getc() == 'c')
+		return 1;
+
+#ifdef CONFIG_SPL_ENV_SUPPORT
+	env_init();
+	env_relocate_spec();
+	if (getenv_yesno("boot_os") != 1)
+		return 1;
+#endif
+
+	return 0;
+}
+#endif
+
 #ifdef CONFIG_DRIVER_TI_CPSW
 
 /* Delay value to add to calibrated value */
@@ -147,12 +174,12 @@ static struct cpsw_slave_data cpsw_slaves[] = {
 	{
 		.slave_reg_ofs	= 0x208,
 		.sliver_reg_ofs	= 0xd80,
-		.phy_id		= 0,
+		.phy_addr	= 2,
 	},
 	{
 		.slave_reg_ofs	= 0x308,
 		.sliver_reg_ofs	= 0xdc0,
-		.phy_id		= 1,
+		.phy_addr	= 3,
 	},
 };
 
@@ -201,12 +228,12 @@ int board_eth_init(bd_t *bis)
 	/* try reading mac address from efuse */
 	mac_lo = readl((*ctrl)->control_core_mac_id_0_lo);
 	mac_hi = readl((*ctrl)->control_core_mac_id_0_hi);
-	mac_addr[0] = mac_hi & 0xFF;
+	mac_addr[0] = (mac_hi & 0xFF0000) >> 16;
 	mac_addr[1] = (mac_hi & 0xFF00) >> 8;
-	mac_addr[2] = (mac_hi & 0xFF0000) >> 16;
-	mac_addr[3] = mac_lo & 0xFF;
+	mac_addr[2] = mac_hi & 0xFF;
+	mac_addr[3] = (mac_lo & 0xFF0000) >> 16;
 	mac_addr[4] = (mac_lo & 0xFF00) >> 8;
-	mac_addr[5] = (mac_lo & 0xFF0000) >> 16;
+	mac_addr[5] = mac_lo & 0xFF;
 
 	if (!getenv("ethaddr")) {
 		printf("<ethaddr> not set. Validating first E-fuse MAC\n");
@@ -214,6 +241,21 @@ int board_eth_init(bd_t *bis)
 		if (is_valid_ether_addr(mac_addr))
 			eth_setenv_enetaddr("ethaddr", mac_addr);
 	}
+
+	mac_lo = readl((*ctrl)->control_core_mac_id_1_lo);
+	mac_hi = readl((*ctrl)->control_core_mac_id_1_hi);
+	mac_addr[0] = (mac_hi & 0xFF0000) >> 16;
+	mac_addr[1] = (mac_hi & 0xFF00) >> 8;
+	mac_addr[2] = mac_hi & 0xFF;
+	mac_addr[3] = (mac_lo & 0xFF0000) >> 16;
+	mac_addr[4] = (mac_lo & 0xFF00) >> 8;
+	mac_addr[5] = mac_lo & 0xFF;
+
+	if (!getenv("eth1addr")) {
+		if (is_valid_ether_addr(mac_addr))
+			eth_setenv_enetaddr("eth1addr", mac_addr);
+	}
+
 	ctrl_val = readl((*ctrl)->control_core_control_io1) & (~0x33);
 	ctrl_val |= 0x22;
 	writel(ctrl_val, (*ctrl)->control_core_control_io1);

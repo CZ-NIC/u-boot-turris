@@ -3,6 +3,7 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
+#ifndef USE_HOSTCC
 #include <common.h>
 #include <serial.h>
 #include <libfdt.h>
@@ -32,6 +33,7 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(NVIDIA_TEGRA20_NAND, "nvidia,tegra20-nand"),
 	COMPAT(NVIDIA_TEGRA20_PWM, "nvidia,tegra20-pwm"),
 	COMPAT(NVIDIA_TEGRA20_DC, "nvidia,tegra20-dc"),
+	COMPAT(NVIDIA_TEGRA124_SDMMC, "nvidia,tegra124-sdhci"),
 	COMPAT(NVIDIA_TEGRA30_SDMMC, "nvidia,tegra30-sdhci"),
 	COMPAT(NVIDIA_TEGRA20_SDMMC, "nvidia,tegra20-sdhci"),
 	COMPAT(NVIDIA_TEGRA20_SFLASH, "nvidia,tegra20-sflash"),
@@ -46,11 +48,15 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(GOOGLE_CROS_EC, "google,cros-ec"),
 	COMPAT(GOOGLE_CROS_EC_KEYB, "google,cros-ec-keyb"),
 	COMPAT(SAMSUNG_EXYNOS_EHCI, "samsung,exynos-ehci"),
+	COMPAT(SAMSUNG_EXYNOS5_XHCI, "samsung,exynos5250-xhci"),
 	COMPAT(SAMSUNG_EXYNOS_USB_PHY, "samsung,exynos-usb-phy"),
+	COMPAT(SAMSUNG_EXYNOS5_USB3_PHY, "samsung,exynos5250-usb3-phy"),
 	COMPAT(SAMSUNG_EXYNOS_TMU, "samsung,exynos-tmu"),
 	COMPAT(SAMSUNG_EXYNOS_FIMD, "samsung,exynos-fimd"),
+	COMPAT(SAMSUNG_EXYNOS_MIPI_DSI, "samsung,exynos-mipi-dsi"),
 	COMPAT(SAMSUNG_EXYNOS5_DP, "samsung,exynos5-dp"),
-	COMPAT(SAMSUNG_EXYNOS5_DWMMC, "samsung,exynos5250-dwmmc"),
+	COMPAT(SAMSUNG_EXYNOS_DWMMC, "samsung,exynos-dwmmc"),
+	COMPAT(SAMSUNG_EXYNOS_MMC, "samsung,exynos-mmc"),
 	COMPAT(SAMSUNG_EXYNOS_SERIAL, "samsung,exynos4210-uart"),
 	COMPAT(MAXIM_MAX77686_PMIC, "maxim,max77686_pmic"),
 	COMPAT(GENERIC_SPI_FLASH, "spi-flash"),
@@ -58,6 +64,10 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(INFINEON_SLB9635_TPM, "infineon,slb9635-tpm"),
 	COMPAT(INFINEON_SLB9645_TPM, "infineon,slb9645-tpm"),
 	COMPAT(SAMSUNG_EXYNOS5_I2C, "samsung,exynos5-hsi2c"),
+	COMPAT(SANDBOX_HOST_EMULATION, "sandbox,host-emulation"),
+	COMPAT(SANDBOX_LCD_SDL, "sandbox,lcd-sdl"),
+	COMPAT(TI_TPS65090, "ti,tps65090"),
+	COMPAT(COMPAT_NXP_PTN3460, "nxp,ptn3460"),
 };
 
 const char *fdtdec_get_compatible(enum fdt_compat_id id)
@@ -84,10 +94,10 @@ fdt_addr_t fdtdec_get_addr_size(const void *blob, int node,
 			size = (fdt_size_t *)((char *)cell +
 					sizeof(fdt_addr_t));
 			*sizep = fdt_size_to_cpu(*size);
-			debug("addr=%p, size=%p\n", (void *)addr,
-			      (void *)*sizep);
+			debug("addr=%08lx, size=%08x\n",
+			      (ulong)addr, *sizep);
 		} else {
-			debug("%p\n", (void *)addr);
+			debug("%08lx\n", (ulong)addr);
 		}
 		return addr;
 	}
@@ -99,24 +109,6 @@ fdt_addr_t fdtdec_get_addr(const void *blob, int node,
 		const char *prop_name)
 {
 	return fdtdec_get_addr_size(blob, node, prop_name, NULL);
-}
-
-s32 fdtdec_get_int(const void *blob, int node, const char *prop_name,
-		s32 default_val)
-{
-	const s32 *cell;
-	int len;
-
-	debug("%s: %s: ", __func__, prop_name);
-	cell = fdt_getprop(blob, node, prop_name, &len);
-	if (cell && len >= sizeof(s32)) {
-		s32 val = fdt32_to_cpu(cell[0]);
-
-		debug("%#x (%d)\n", val, val);
-		return val;
-	}
-	debug("(not found)\n");
-	return default_val;
 }
 
 uint64_t fdtdec_get_uint64(const void *blob, int node, const char *prop_name,
@@ -609,8 +601,33 @@ int fdtdec_decode_region(const void *blob, int node,
 	if (!cell || (len != sizeof(fdt_addr_t) * 2))
 		return -1;
 
-	*ptrp = (void *)fdt_addr_to_cpu(*cell);
+	*ptrp = map_sysmem(fdt_addr_to_cpu(*cell), *size);
 	*size = fdt_size_to_cpu(cell[1]);
 	debug("%s: size=%zx\n", __func__, *size);
 	return 0;
 }
+
+/**
+ * Read a flash entry from the fdt
+ *
+ * @param blob		FDT blob
+ * @param node		Offset of node to read
+ * @param name		Name of node being read
+ * @param entry		Place to put offset and size of this node
+ * @return 0 if ok, -ve on error
+ */
+int fdtdec_read_fmap_entry(const void *blob, int node, const char *name,
+			   struct fmap_entry *entry)
+{
+	u32 reg[2];
+
+	if (fdtdec_get_int_array(blob, node, "reg", reg, 2)) {
+		debug("Node '%s' has bad/missing 'reg' property\n", name);
+		return -FDT_ERR_NOTFOUND;
+	}
+	entry->offset = reg[0];
+	entry->length = reg[1];
+
+	return 0;
+}
+#endif

@@ -21,7 +21,7 @@
 #define CONFIG_SYS_RAMBOOT
 #define CONFIG_SYS_EXTRA_ENV_RELOC
 #define CONFIG_SYS_TEXT_BASE		0x11000000
-#define CONFIG_RESET_VECTOR_ADDRESS	0x1107fffc
+#define CONFIG_RESET_VECTOR_ADDRESS	0x110bfffc
 #endif
 
 #ifdef CONFIG_NAND
@@ -29,7 +29,7 @@
 #define CONFIG_SPL_INIT_MINIMAL
 #define CONFIG_SPL_SERIAL_SUPPORT
 #define CONFIG_SPL_NAND_SUPPORT
-#define CONFIG_SPL_NAND_MINIMAL
+#define CONFIG_SPL_NAND_BOOT
 #define CONFIG_SPL_FLUSH_IMAGE
 #define CONFIG_SPL_TARGET		"u-boot-with-spl.bin"
 
@@ -38,7 +38,7 @@
 #define CONFIG_SPL_MAX_SIZE		8192
 #define CONFIG_SPL_RELOC_TEXT_BASE	0x00100000
 #define CONFIG_SPL_RELOC_STACK		0x00100000
-#define CONFIG_SYS_NAND_U_BOOT_SIZE	((512 << 10) - 0x2000)
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	((768 << 10) - 0x2000)
 #define CONFIG_SYS_NAND_U_BOOT_DST	(0x00200000 - CONFIG_SPL_MAX_SIZE)
 #define CONFIG_SYS_NAND_U_BOOT_START	0x00200000
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0
@@ -55,7 +55,6 @@
 /* High Level Configuration Options */
 #define CONFIG_BOOKE			/* BOOKE */
 #define CONFIG_E500			/* BOOKE e500 family */
-#define CONFIG_MPC85xx		/* MPC8540/60/55/41/48/P1020/P2020/P1010,etc*/
 #define CONFIG_FSL_IFC			/* Enable IFC Support */
 
 #define CONFIG_FSL_LAW			/* Use common FSL init code */
@@ -80,7 +79,7 @@
 #define CONFIG_SYS_MEMTEST_END		0x01ffffff
 
 /* DDR Setup */
-#define CONFIG_FSL_DDR3
+#define CONFIG_SYS_FSL_DDR3
 #undef CONFIG_SYS_DDR_RAW_TIMING
 #undef CONFIG_DDR_SPD
 #define CONFIG_SYS_SPD_BUS_NUM		0
@@ -181,18 +180,18 @@ extern unsigned long get_sdram_size(void);
 				| CSOR_NAND_PB(64))	/*Pages Per Block = 64*/
 
 /* NAND Flash Timing Params */
-#define CONFIG_SYS_NAND_FTIM0		(FTIM0_NAND_TCCST(0x08)  \
-					| FTIM0_NAND_TWP(0x06)   \
-					| FTIM0_NAND_TWCHT(0x03) \
+#define CONFIG_SYS_NAND_FTIM0		(FTIM0_NAND_TCCST(0x03)  \
+					| FTIM0_NAND_TWP(0x05)   \
+					| FTIM0_NAND_TWCHT(0x02) \
 					| FTIM0_NAND_TWH(0x04))
-#define CONFIG_SYS_NAND_FTIM1		(FTIM1_NAND_TADLE(0x18) \
-					| FTIM1_NAND_TWBE(0x23) \
-					| FTIM1_NAND_TRR(0x08)  \
+#define CONFIG_SYS_NAND_FTIM1		(FTIM1_NAND_TADLE(0x1C) \
+					| FTIM1_NAND_TWBE(0x1E) \
+					| FTIM1_NAND_TRR(0x07)  \
 					| FTIM1_NAND_TRP(0x05))
 #define CONFIG_SYS_NAND_FTIM2		(FTIM2_NAND_TRAD(0x08)  \
 					| FTIM2_NAND_TREH(0x04) \
-					| FTIM2_NAND_TWHRE(0x3f))
-#define CONFIG_SYS_NAND_FTIM3		FTIM3_NAND_TWW(0x22)
+					| FTIM2_NAND_TWHRE(0x11))
+#define CONFIG_SYS_NAND_FTIM3		FTIM3_NAND_TWW(0x04)
 
 #define CONFIG_SYS_NAND_BASE_LIST	{ CONFIG_SYS_NAND_BASE }
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
@@ -221,7 +220,7 @@ extern unsigned long get_sdram_size(void);
 						- GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_OFFSET	CONFIG_SYS_GBL_DATA_OFFSET
 
-#define CONFIG_SYS_MONITOR_LEN		(256 * 1024) /* Reserve 256 kB for Mon*/
+#define CONFIG_SYS_MONITOR_LEN		(768 * 1024)
 #define CONFIG_SYS_MALLOC_LEN		(1024 * 1024)	/* Reserved for malloc*/
 
 /* Serial Port */
@@ -326,7 +325,7 @@ extern unsigned long get_sdram_size(void);
 #define CONFIG_ENV_IS_IN_NAND
 #define CONFIG_SYS_EXTRA_ENV_RELOC
 #define CONFIG_ENV_SIZE		CONFIG_SYS_NAND_BLOCK_SIZE
-#define CONFIG_ENV_OFFSET	((512 * 1024) + CONFIG_SYS_NAND_BLOCK_SIZE)
+#define CONFIG_ENV_OFFSET	((768 * 1024) + CONFIG_SYS_NAND_BLOCK_SIZE)
 #define CONFIG_ENV_RANGE	(3 * CONFIG_ENV_SIZE)
 #elif defined(CONFIG_SYS_RAMBOOT)
 #define CONFIG_ENV_IS_NOWHERE	/* Store ENV in memory only */
@@ -361,7 +360,6 @@ extern unsigned long get_sdram_size(void);
 #define CONFIG_CMDLINE_EDITING			/* Command-line editing */
 #define CONFIG_AUTO_COMPLETE			/* add autocompletion support */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
@@ -372,7 +370,6 @@ extern unsigned long get_sdram_size(void);
 						/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16		/* max number of command args */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE/* Boot Argument Buffer Size */
-#define CONFIG_SYS_HZ		1000	/* decrementer freq: 1ms ticks */
 
 /*
  * For booting Linux, the board info and command line data
@@ -384,7 +381,6 @@ extern unsigned long get_sdram_size(void);
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE	230400	/* speed to run kgdb serial port */
-#define CONFIG_KGDB_SER_INDEX	2	/* which serial port to use */
 #endif
 
 #define CONFIG_USB_EHCI

@@ -267,7 +267,6 @@
 #define CONFIG_SYS_LONGHELP
 
 /* Monitor Command Prompt */
-#define CONFIG_SYS_PROMPT		"=> "
 
 
 /*
@@ -294,7 +293,6 @@
  *
  *****************************************************************************/
 
-#define CONFIG_MPC8260		1	/* This is an MPC8260 CPU   */
 #define CONFIG_PPMC8260		1	/* on an Wind River PPMC8260 Board  */
 #define CONFIG_CPM2		1	/* Has a CPM2 */
 
@@ -315,7 +313,6 @@
 #define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE /* Boot Argument Buffer Size	   */
 
 #define CONFIG_SYS_LOAD_ADDR		0x140000   /* default load address */
-#define CONFIG_SYS_HZ			1000	/* decrementer freq: 1 ms ticks */
 
 #define CONFIG_SYS_MEMTEST_START	0x2000	/* memtest works from the end of */
 					/* the exception vector table */

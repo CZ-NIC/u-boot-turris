@@ -22,7 +22,7 @@
 #define CONFIG_SYS_RAMBOOT
 #define CONFIG_SYS_EXTRA_ENV_RELOC
 #define CONFIG_SYS_TEXT_BASE		0x11000000
-#define CONFIG_RESET_VECTOR_ADDRESS	0x1107fffc
+#define CONFIG_RESET_VECTOR_ADDRESS	0x110bfffc
 #endif
 #define CONFIG_SYS_FSL_ERRATUM_IFC_A002769	1
 #ifdef CONFIG_SPIFLASH
@@ -30,7 +30,14 @@
 #define CONFIG_SYS_RAMBOOT
 #define CONFIG_SYS_EXTRA_ENV_RELOC
 #define CONFIG_SYS_TEXT_BASE		0x11000000
-#define CONFIG_RESET_VECTOR_ADDRESS	0x1107fffc
+#define CONFIG_RESET_VECTOR_ADDRESS	0x110bfffc
+#endif
+#ifdef CONFIG_NAND_SECBOOT
+#define CONFIG_RAMBOOT_NAND
+#define CONFIG_SYS_RAMBOOT
+#define CONFIG_SYS_EXTRA_ENV_RELOC
+#define CONFIG_SYS_TEXT_BASE		0x11000000
+#define CONFIG_RESET_VECTOR_ADDRESS	0x110bfffc
 #endif
 
 #ifdef CONFIG_NAND
@@ -38,7 +45,7 @@
 #define CONFIG_SPL_INIT_MINIMAL
 #define CONFIG_SPL_SERIAL_SUPPORT
 #define CONFIG_SPL_NAND_SUPPORT
-#define CONFIG_SPL_NAND_MINIMAL
+#define CONFIG_SPL_NAND_BOOT
 #define CONFIG_SPL_FLUSH_IMAGE
 #define CONFIG_SPL_TARGET		"u-boot-with-spl.bin"
 
@@ -47,7 +54,7 @@
 #define CONFIG_SPL_MAX_SIZE		8192
 #define CONFIG_SPL_RELOC_TEXT_BASE	0x00100000
 #define CONFIG_SPL_RELOC_STACK		0x00100000
-#define CONFIG_SYS_NAND_U_BOOT_SIZE	((512 << 10) - 0x2000)
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	((768 << 10) - 0x2000)
 #define CONFIG_SYS_NAND_U_BOOT_DST	(0x00200000 - CONFIG_SPL_MAX_SIZE)
 #define CONFIG_SYS_NAND_U_BOOT_START	0x00200000
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0
@@ -55,7 +62,7 @@
 #endif
 
 #ifndef CONFIG_SYS_TEXT_BASE
-#define CONFIG_SYS_TEXT_BASE		0x8ff80000
+#define CONFIG_SYS_TEXT_BASE		0x8ff40000
 #endif
 
 #ifndef CONFIG_RESET_VECTOR_ADDRESS
@@ -71,7 +78,6 @@
 /* High Level Configuration Options */
 #define CONFIG_BOOKE			/* BOOKE */
 #define CONFIG_E500			/* BOOKE e500 family */
-#define CONFIG_MPC85xx
 #define CONFIG_FSL_IFC			/* Enable IFC Support */
 #define CONFIG_SYS_HAS_SERDES		/* common SERDES init code */
 
@@ -134,7 +140,7 @@
 #define CONFIG_SYS_MEMTEST_END		0x01ffffff
 
 /* DDR Setup */
-#define CONFIG_FSL_DDR3
+#define CONFIG_SYS_FSL_DDR3
 #define CONFIG_SYS_SPD_BUS_NUM		0
 #define SPD_EEPROM_ADDRESS1		0x54 /* I2C access */
 #define SPD_EEPROM_ADDRESS2		0x56 /* I2C access */
@@ -354,7 +360,7 @@ combinations. this should be removed later
 #endif
 
 /* Set up IFC registers for boot location NOR/NAND */
-#if defined(CONFIG_NAND)
+#if defined(CONFIG_NAND) || defined(CONFIG_NAND_SECBOOT)
 #define CONFIG_SYS_CSPR0		CONFIG_SYS_NAND_CSPR
 #define CONFIG_SYS_AMASK0		CONFIG_SYS_NAND_AMASK
 #define CONFIG_SYS_CSOR0		CONFIG_SYS_NAND_CSOR
@@ -397,7 +403,7 @@ combinations. this should be removed later
 						- GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_OFFSET	CONFIG_SYS_GBL_DATA_OFFSET
 
-#define CONFIG_SYS_MONITOR_LEN		(256 * 1024) /* Reserve 256 kB for Mon*/
+#define CONFIG_SYS_MONITOR_LEN		(768 * 1024)
 #define CONFIG_SYS_MALLOC_LEN		(1024 * 1024)	/* Reserved for malloc*/
 
 /* Serial Port */
@@ -540,6 +546,7 @@ combinations. this should be removed later
  */
 #if defined(CONFIG_RAMBOOT_SDCARD)
 #define CONFIG_ENV_IS_IN_MMC
+#define CONFIG_FSL_FIXED_MMC_LOCATION
 #define CONFIG_SYS_MMC_ENV_DEV		0
 #define CONFIG_ENV_SIZE			0x2000
 #elif defined(CONFIG_RAMBOOT_SPIFLASH)
@@ -551,10 +558,10 @@ combinations. this should be removed later
 #define CONFIG_ENV_OFFSET	0x100000	/* 1MB */
 #define CONFIG_ENV_SECT_SIZE	0x10000
 #define CONFIG_ENV_SIZE		0x2000
-#elif defined(CONFIG_NAND)
+#elif defined(CONFIG_NAND) || defined(CONFIG_NAND_SECBOOT)
 #define CONFIG_ENV_IS_IN_NAND
 #define CONFIG_ENV_SIZE		CONFIG_SYS_NAND_BLOCK_SIZE
-#define CONFIG_ENV_OFFSET	((512 * 1024) + CONFIG_SYS_NAND_BLOCK_SIZE)
+#define CONFIG_ENV_OFFSET	((768 * 1024) + CONFIG_SYS_NAND_BLOCK_SIZE)
 #define CONFIG_ENV_RANGE	(3 * CONFIG_ENV_SIZE)
 #elif defined(CONFIG_SYS_RAMBOOT)
 #define CONFIG_ENV_IS_NOWHERE		/* Store ENV in memory only */
@@ -562,13 +569,9 @@ combinations. this should be removed later
 #define CONFIG_ENV_SIZE			0x2000
 #else
 #define CONFIG_ENV_IS_IN_FLASH
-#if CONFIG_SYS_MONITOR_BASE > 0xfff80000
-#define CONFIG_ENV_ADDR	0xfff80000
-#else
 #define CONFIG_ENV_ADDR	(CONFIG_SYS_MONITOR_BASE - CONFIG_ENV_SECT_SIZE)
-#endif
 #define CONFIG_ENV_SIZE		0x2000
-#define CONFIG_ENV_SECT_SIZE	0x20000 /* 128K (one sector) */
+#define CONFIG_ENV_SECT_SIZE	0x20000
 #endif
 
 #define CONFIG_LOADS_ECHO		/* echo on for serial download */
@@ -603,7 +606,6 @@ combinations. this should be removed later
 #define CONFIG_CMDLINE_EDITING			/* Command-line editing */
 #define CONFIG_AUTO_COMPLETE			/* add autocompletion support */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
@@ -614,7 +616,6 @@ combinations. this should be removed later
 						/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16		/* max number of command args */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE/* Boot Argument Buffer Size */
-#define CONFIG_SYS_HZ		1000		/* decrementer freq:1ms ticks */
 
 
 /*
@@ -627,7 +628,6 @@ combinations. this should be removed later
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE	230400	/* speed to run kgdb serial port */
-#define CONFIG_KGDB_SER_INDEX	2	/* which serial port to use */
 #endif
 
 /*
@@ -702,5 +702,7 @@ combinations. this should be removed later
 	"bootm $loadaddr $ramdiskaddr $fdtaddr"
 
 #define CONFIG_BOOTCOMMAND CONFIG_RAMBOOTCOMMAND
+
+#include <asm/fsl_secure_boot.h>
 
 #endif	/* __CONFIG_H */

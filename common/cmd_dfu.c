@@ -11,29 +11,34 @@
 #include <common.h>
 #include <dfu.h>
 #include <g_dnl.h>
+#include <usb.h>
 
 static int do_dfu(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
-	char *s = "dfu";
-	int ret, i = 0;
-
-	if (argc < 3)
+	if (argc < 4)
 		return CMD_RET_USAGE;
 
-	ret = dfu_init_env_entities(argv[1], simple_strtoul(argv[2], NULL, 10));
-	if (ret)
-		return ret;
+	char *usb_controller = argv[1];
+	char *interface = argv[2];
+	char *devstring = argv[3];
 
-	if (argc > 3 && strcmp(argv[3], "list") == 0) {
+	int ret, i = 0;
+
+	ret = dfu_init_env_entities(interface, simple_strtoul(devstring,
+							      NULL, 10));
+	if (ret)
+		goto done;
+
+	ret = CMD_RET_SUCCESS;
+	if (argc > 4 && strcmp(argv[4], "list") == 0) {
 		dfu_show_entities();
 		goto done;
 	}
 
-#ifdef CONFIG_TRATS
-	board_usb_init();
-#endif
+	int controller_index = simple_strtoul(usb_controller, NULL, 0);
+	board_usb_init(controller_index, USB_INIT_DEVICE);
 
-	g_dnl_register(s);
+	g_dnl_register("usb_dnl_dfu");
 	while (1) {
 		if (dfu_reset())
 			/*
@@ -57,13 +62,14 @@ done:
 	if (dfu_reset())
 		run_command("reset", 0);
 
-	return CMD_RET_SUCCESS;
+	return ret;
 }
 
 U_BOOT_CMD(dfu, CONFIG_SYS_MAXARGS, 1, do_dfu,
 	"Device Firmware Upgrade",
-	"<interface> <dev> [list]\n"
-	"  - device firmware upgrade on a device <dev>\n"
-	"    attached to interface <interface>\n"
-	"    [list] - list available alt settings"
+	"<USB_controller> <interface> <dev> [list]\n"
+	"  - device firmware upgrade via <USB_controller>\n"
+	"    on device <dev>, attached to interface\n"
+	"    <interface>\n"
+	"    [list] - list available alt settings\n"
 );

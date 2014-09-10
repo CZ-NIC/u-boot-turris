@@ -41,7 +41,6 @@
 /* High Level Configuration Options */
 #define CONFIG_BOOKE			/* BOOKE */
 #define CONFIG_E500			/* BOOKE e500 family */
-#define CONFIG_MPC85xx			/* MPC8540/60/55/41/48 */
 #define CONFIG_P1022
 #define CONFIG_CONTROLCENTERD
 #define CONFIG_MP			/* support multiple processors */
@@ -138,7 +137,7 @@
 #define CONFIG_SYS_SDRAM_SIZE 1024
 #define CONFIG_VERY_BIG_RAM
 
-#define CONFIG_FSL_DDR3
+#define CONFIG_SYS_FSL_DDR3
 #define CONFIG_NUM_DDR_CONTROLLERS	1
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 #define CONFIG_CHIP_SELECTS_PER_CTRL	(2 * CONFIG_DIMM_SLOTS_PER_CTLR)
@@ -200,9 +199,10 @@
 #define CONFIG_SYS_FSL_I2C2_SPEED	400000
 #define CONFIG_SYS_FSL_I2C2_SLAVE	0x7F
 #define CONFIG_SYS_FSL_I2C2_OFFSET	0x3100
-/* Probing DP501 I2C-Bridge will hang */
-#define CONFIG_SYS_I2C_NOPROBES		{ {0, 0x30}, {0, 0x37}, {0, 0x3a}, \
-					  {0, 0x3b}, {0, 0x50} }
+
+#ifndef CONFIG_TRAILBLAZER
+#define CONFIG_CMD_I2C
+#endif
 
 #define CONFIG_PCA9698			/* NXP PCA9698 */
 
@@ -383,7 +383,6 @@
 #endif /* CONFIG_TRAILBLAZER */
 
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 #ifdef CONFIG_CMD_KGDB
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
 #else
@@ -440,7 +439,6 @@
 /*
  * Miscellaneous configurable options
  */
-#define CONFIG_SYS_HZ		1000
 #define CONFIG_HW_WATCHDOG
 #define CONFIG_LOADS_ECHO
 #define CONFIG_SYS_LOADS_BAUD_CHANGE

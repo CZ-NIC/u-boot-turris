@@ -24,11 +24,11 @@
 #define CONFIG_SYS_RAMBOOT
 #define CONFIG_SYS_EXTRA_ENV_RELOC
 #define CONFIG_SYS_TEXT_BASE		0x11000000
-#define CONFIG_RESET_VECTOR_ADDRESS	0x1107fffc
+#define CONFIG_RESET_VECTOR_ADDRESS	0x110bfffc
 #endif
 
 #ifndef CONFIG_SYS_TEXT_BASE
-#define CONFIG_SYS_TEXT_BASE		0xeff80000
+#define CONFIG_SYS_TEXT_BASE		0xeff40000
 #endif
 
 #ifndef CONFIG_RESET_VECTOR_ADDRESS
@@ -42,7 +42,6 @@
 /* High Level Configuration Options */
 #define CONFIG_BOOKE
 #define CONFIG_E500
-#define CONFIG_MPC85xx
 
 #define CONFIG_MP
 
@@ -89,7 +88,7 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_SYS_CCSRBAR_PHYS_LOW	CONFIG_SYS_CCSRBAR
 
 /* DDR Setup */
-#define CONFIG_FSL_DDR3
+#define CONFIG_SYS_FSL_DDR3
 
 #define CONFIG_SYS_SDRAM_SIZE_LAW	LAW_SIZE_512M
 #define CONFIG_CHIP_SELECTS_PER_CTRL	1
@@ -203,7 +202,7 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 					GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_OFFSET	CONFIG_SYS_GBL_DATA_OFFSET
 
-#define CONFIG_SYS_MONITOR_LEN	(512 * 1024)/* Reserve 512 kB for Mon */
+#define CONFIG_SYS_MONITOR_LEN	(768 * 1024)
 #define CONFIG_SYS_MALLOC_LEN	(1024 * 1024)/* Reserved for malloc */
 
 #define CONFIG_SYS_BR0_PRELIM	CONFIG_FLASH_BR_PRELIM	/* NOR Base Address */
@@ -238,9 +237,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_OF_LIBFDT
 #define CONFIG_OF_BOARD_SETUP
 #define CONFIG_OF_STDOUT_VIA_ALIAS
-
-#define CONFIG_SYS_64BIT_VSPRINTF
-#define CONFIG_SYS_64BIT_STRTOUL
 
 /* new uImage format support */
 #define CONFIG_FIT
@@ -352,7 +348,7 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #ifdef CONFIG_QE
 /* QE microcode/firmware address */
 #define CONFIG_SYS_QE_FMAN_FW_IN_NOR
-#define CONFIG_SYS_QE_FMAN_FW_ADDR	0xefec0000
+#define CONFIG_SYS_QE_FW_ADDR	0xefec0000
 #define CONFIG_SYS_QE_FMAN_FW_LENGTH	0x10000
 #endif /* CONFIG_QE */
 
@@ -407,11 +403,7 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #endif
 #else
 #define CONFIG_ENV_IS_IN_FLASH
-#if CONFIG_SYS_MONITOR_BASE > 0xfff80000
-#define CONFIG_ENV_ADDR	0xfff80000
-#else
 #define CONFIG_ENV_ADDR	(CONFIG_SYS_MONITOR_BASE - CONFIG_ENV_SECT_SIZE)
-#endif
 #define CONFIG_ENV_SIZE		0x2000
 #define CONFIG_ENV_SECT_SIZE	0x20000 /* 128K (one sector) */
 #endif
@@ -472,7 +464,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_SYS_LONGHELP			/* undef to save memory */
 #define CONFIG_CMDLINE_EDITING			/* Command-line editing */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
 #else
@@ -482,7 +473,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 	/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16	/* max number of command args */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE/* Boot Argument Buffer Size */
-#define CONFIG_SYS_HZ		1000	/* decrementer freq: 1ms tick */
 
 /*
  * For booting Linux, the board info and command line data

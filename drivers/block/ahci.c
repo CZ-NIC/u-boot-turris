@@ -41,7 +41,7 @@ u16 *ataid[AHCI_MAX_PORTS];
 #define WAIT_MS_SPINUP	20000
 #define WAIT_MS_DATAIO	5000
 #define WAIT_MS_FLUSH	5000
-#define WAIT_MS_LINKUP	4
+#define WAIT_MS_LINKUP	40
 
 static inline u32 ahci_port_base(u32 base, u32 port)
 {
@@ -379,6 +379,11 @@ static int ahci_init_one(pci_dev_t pdev)
 	int rc;
 
 	probe_ent = malloc(sizeof(struct ahci_probe_ent));
+	if (!probe_ent) {
+		printf("%s: No memory for probe_ent\n", __func__);
+		return -ENOMEM;
+	}
+
 	memset(probe_ent, 0, sizeof(struct ahci_probe_ent));
 	probe_ent->dev = pdev;
 
@@ -503,7 +508,7 @@ static int ahci_port_start(u8 port)
 	mem = (u32) malloc(AHCI_PORT_PRIV_DMA_SZ + 2048);
 	if (!mem) {
 		free(pp);
-		printf("No mem for table!\n");
+		printf("%s: No mem for table!\n", __func__);
 		return -ENOMEM;
 	}
 
@@ -618,7 +623,8 @@ static int ata_scsiop_inquiry(ccb *pccb)
 		95 - 4,
 	};
 	u8 fis[20];
-	u16 *tmpid;
+	u16 *idbuf;
+	ALLOC_CACHE_ALIGN_BUFFER(u16, tmpid, ATA_ID_WORDS);
 	u8 port;
 
 	/* Clean ccb data buffer */
@@ -637,28 +643,32 @@ static int ata_scsiop_inquiry(ccb *pccb)
 
 	/* Read id from sata */
 	port = pccb->target;
-	tmpid = malloc(ATA_ID_WORDS * 2);
-	if (!tmpid)
-		return -ENOMEM;
 
 	if (ahci_device_data_io(port, (u8 *) &fis, sizeof(fis), (u8 *)tmpid,
 				ATA_ID_WORDS * 2, 0)) {
 		debug("scsi_ahci: SCSI inquiry command failure.\n");
-		free(tmpid);
 		return -EIO;
 	}
 
-	if (ataid[port])
-		free(ataid[port]);
-	ataid[port] = tmpid;
-	ata_swap_buf_le16(tmpid, ATA_ID_WORDS);
+	if (!ataid[port]) {
+		ataid[port] = malloc(ATA_ID_WORDS * 2);
+		if (!ataid[port]) {
+			printf("%s: No memory for ataid[port]\n", __func__);
+			return -ENOMEM;
+		}
+	}
+
+	idbuf = ataid[port];
+
+	memcpy(idbuf, tmpid, ATA_ID_WORDS * 2);
+	ata_swap_buf_le16(idbuf, ATA_ID_WORDS);
 
 	memcpy(&pccb->pdata[8], "ATA     ", 8);
-	ata_id_strcpy((u16 *) &pccb->pdata[16], &tmpid[ATA_ID_PROD], 16);
-	ata_id_strcpy((u16 *) &pccb->pdata[32], &tmpid[ATA_ID_FW_REV], 4);
+	ata_id_strcpy((u16 *)&pccb->pdata[16], &idbuf[ATA_ID_PROD], 16);
+	ata_id_strcpy((u16 *)&pccb->pdata[32], &idbuf[ATA_ID_FW_REV], 4);
 
 #ifdef DEBUG
-	ata_dump_id(tmpid);
+	ata_dump_id(idbuf);
 #endif
 	return 0;
 }
@@ -889,6 +899,11 @@ int ahci_init(u32 base)
 	u32 linkmap;
 
 	probe_ent = malloc(sizeof(struct ahci_probe_ent));
+	if (!probe_ent) {
+		printf("%s: No memory for probe_ent\n", __func__);
+		return -ENOMEM;
+	}
+
 	memset(probe_ent, 0, sizeof(struct ahci_probe_ent));
 
 	probe_ent->host_flags = ATA_FLAG_SATA
@@ -924,6 +939,11 @@ int ahci_init(u32 base)
 err_out:
 	return rc;
 }
+
+void __weak scsi_init(void)
+{
+}
+
 #endif
 
 /*

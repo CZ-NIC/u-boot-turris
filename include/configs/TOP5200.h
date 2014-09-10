@@ -25,8 +25,7 @@
  * (easy to change)
  */
 
-#define CONFIG_MPC5xxx		1	/* This is an MPC5xxx CPU */
-#define CONFIG_MPC5200		1	/* More exactly a MPC5200 */
+#define CONFIG_MPC5200		1	/* This is a MPC5200 CPU */
 #define CONFIG_TOP5200		1	/* ... on TOP5200 board - we need this for FEC.C */
 
 /*
@@ -317,7 +316,6 @@
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory	    */
-#define CONFIG_SYS_PROMPT		"=> "	/* Monitor Command Prompt   */
 #if defined(CONFIG_CMD_KGDB)
 #  define CONFIG_SYS_CBSIZE		1024	/* Console I/O Buffer Size  */
 #else
@@ -331,8 +329,6 @@
 #define CONFIG_SYS_MEMTEST_END		0x01f00000	/* 1 ... 31 MB in DRAM	*/
 
 #define CONFIG_SYS_LOAD_ADDR		0x200000	/* default load address */
-
-#define CONFIG_SYS_HZ			1000	/* decrementer freq: 1 ms ticks */
 
 #define CONFIG_SYS_CACHELINE_SIZE	32	/* For MPC5xxx CPUs */
 #if defined(CONFIG_CMD_KGDB)

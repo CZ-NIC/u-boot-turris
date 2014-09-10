@@ -67,7 +67,7 @@
 #define CONFIG_HOSTNAME		bf537-pnav
 /* Uncomment next line to use fixed MAC address */
 /* #define CONFIG_ETHADDR	02:80:ad:24:21:18 */
-
+#define CONFIG_LIB_RAND
 
 /*
  * Flash Settings
@@ -111,8 +111,8 @@
  * it linked after the configuration sector.
  */
 # define LDS_BOARD_TEXT \
-	arch/blackfin/lib/libblackfin.o (.text*); \
-	arch/blackfin/cpu/libblackfin.o (.text*); \
+	arch/blackfin/lib/built-in.o (.text*); \
+	arch/blackfin/cpu/built-in.o (.text*); \
 	. = DEFINED(env_offset) ? env_offset : .; \
 	common/env_embedded.o (.text*);
 #endif

@@ -26,7 +26,6 @@
 /* ARM asynchronous clock */
 #define CONFIG_SYS_AT91_MAIN_CLOCK	16367660 /* 16.367 MHz crystal */
 #define CONFIG_SYS_AT91_SLOW_CLOCK	32768
-#define CONFIG_SYS_HZ			1000
 
 #define CONFIG_AT91SAM9263EK	1	/* It's an AT91SAM9263EK Board */
 
@@ -104,6 +103,7 @@
 #define CONFIG_CMD_PING		1
 #define CONFIG_CMD_DHCP		1
 #define CONFIG_CMD_NAND		1
+#define CONFIG_CMD_MMC
 #define CONFIG_CMD_USB		1
 
 /* SDRAM */
@@ -123,6 +123,18 @@
 #define AT91_SPI_CLK			15000000
 #define DATAFLASH_TCSS			(0x1a << 16)
 #define DATAFLASH_TCHS			(0x1 << 24)
+
+/* MMC */
+#ifdef CONFIG_CMD_MMC
+#define CONFIG_MMC
+#define CONFIG_GENERIC_MMC
+#define CONFIG_GENERIC_ATMEL_MCI
+#endif
+
+/* FAT */
+#ifdef CONFIG_CMD_FAT
+#define CONFIG_DOS_PARTITION
+#endif
 
 /* NOR flash, if populated */
 #ifdef CONFIG_SYS_USE_NORFLASH
@@ -276,9 +288,11 @@
 #define CONFIG_RMII			1
 #define CONFIG_NET_RETRY_COUNT		20
 #define CONFIG_RESET_PHY_R		1
+#define CONFIG_AT91_WANTS_COMMON_PHY
 
 /* USB */
 #define CONFIG_USB_ATMEL
+#define CONFIG_USB_ATMEL_CLK_SEL_PLLB
 #define CONFIG_USB_OHCI_NEW		1
 #define CONFIG_DOS_PARTITION		1
 #define CONFIG_SYS_USB_OHCI_CPU_INIT		1

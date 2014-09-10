@@ -35,20 +35,16 @@ static const struct ddr_data ddr3_data = {
 	.datawdsratio0 = K4B2G1646EBIH9_WR_DQS,
 	.datafwsratio0 = K4B2G1646EBIH9_PHY_FIFO_WE,
 	.datawrsratio0 = K4B2G1646EBIH9_PHY_WR_DATA,
-	.datadldiff0 = PHY_DLL_LOCK_DIFF,
 };
 
 static const struct cmd_control ddr3_cmd_ctrl_data = {
 	.cmd0csratio = K4B2G1646EBIH9_RATIO,
-	.cmd0dldiff = K4B2G1646EBIH9_DLL_LOCK_DIFF,
 	.cmd0iclkout = K4B2G1646EBIH9_INVERT_CLKOUT,
 
 	.cmd1csratio = K4B2G1646EBIH9_RATIO,
-	.cmd1dldiff = K4B2G1646EBIH9_DLL_LOCK_DIFF,
 	.cmd1iclkout = K4B2G1646EBIH9_INVERT_CLKOUT,
 
 	.cmd2csratio = K4B2G1646EBIH9_RATIO,
-	.cmd2dldiff = K4B2G1646EBIH9_DLL_LOCK_DIFF,
 	.cmd2iclkout = K4B2G1646EBIH9_INVERT_CLKOUT,
 };
 
@@ -81,9 +77,17 @@ void set_mux_conf_regs(void)
 	enable_board_pin_mux();
 }
 
+const struct ctrl_ioregs ioregs = {
+	.cm0ioctl		= K4B2G1646EBIH9_IOCTRL_VALUE,
+	.cm1ioctl		= K4B2G1646EBIH9_IOCTRL_VALUE,
+	.cm2ioctl		= K4B2G1646EBIH9_IOCTRL_VALUE,
+	.dt0ioctl		= K4B2G1646EBIH9_IOCTRL_VALUE,
+	.dt1ioctl		= K4B2G1646EBIH9_IOCTRL_VALUE,
+};
+
 void sdram_init(void)
 {
-	config_ddr(400, K4B2G1646EBIH9_IOCTRL_VALUE, &ddr3_data,
+	config_ddr(400, &ioregs, &ddr3_data,
 		   &ddr3_cmd_ctrl_data, &ddr3_emif_reg_data, 0);
 }
 #endif
@@ -112,7 +116,7 @@ static struct cpsw_slave_data cpsw_slaves[] = {
 	{
 		.slave_reg_ofs	= 0x208,
 		.sliver_reg_ofs	= 0xd80,
-		.phy_id		= 0,
+		.phy_addr	= 0,
 		.phy_if		= PHY_INTERFACE_MODE_RMII,
 	},
 };

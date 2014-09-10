@@ -14,7 +14,6 @@
 /* System configurations */
 #define CONFIG_MX28				/* i.MX28 SoC */
 #define CONFIG_MACH_TYPE	MACH_TYPE_MX28EVK
-#define CONFIG_SYS_PROMPT	"MX28EVK U-Boot > "
 
 /* U-Boot Commands */
 #define CONFIG_SYS_NO_FLASH
@@ -49,7 +48,11 @@
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
 
 /* Environment */
+#ifndef CONFIG_ENV_IS_IN_SPI_FLASH
 #define CONFIG_ENV_SIZE			(16 * 1024)
+#else
+#define CONFIG_ENV_SIZE			(4 * 1024)
+#endif
 #define CONFIG_ENV_OVERWRITE
 
 /* Environment is in MMC */
@@ -71,7 +74,6 @@
 /* Environemnt is in SPI flash */
 #if defined(CONFIG_CMD_SF) && defined(CONFIG_ENV_IS_IN_SPI_FLASH)
 #define CONFIG_SYS_REDUNDAND_ENVIRONMENT
-#define CONFIG_ENV_SIZE			0x1000		/* 4KB */
 #define CONFIG_ENV_OFFSET		0x40000		/* 256K */
 #define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET + CONFIG_ENV_SIZE)
 #define CONFIG_ENV_SECT_SIZE		0x1000
@@ -97,7 +99,7 @@
 		"512k(environment),"		\
 		"512k(redundant-environment),"	\
 		"4m(kernel),"			\
-		"128k(fdt),"			\
+		"512k(fdt),"			\
 		"8m(ramdisk),"			\
 		"-(filesystem)"
 #endif
@@ -161,9 +163,9 @@
 
 /* Extra Environment */
 #define CONFIG_EXTRA_ENV_SETTINGS \
+	"ubifs_file=filesystem.ubifs\0" \
 	"update_nand_full_filename=u-boot.nand\0" \
 	"update_nand_firmware_filename=u-boot.sb\0"	\
-	"update_sd_firmware_filename=u-boot.sd\0" \
 	"update_nand_firmware_maxsz=0x100000\0"	\
 	"update_nand_stride=0x40\0"	/* MX28 datasheet ch. 12.12 */ \
 	"update_nand_count=0x4\0"	/* MX28 datasheet ch. 12.12 */ \
@@ -172,7 +174,7 @@
 		"nand info ; " \
 		"setexpr fcb_sz ${update_nand_stride} * ${update_nand_count};" \
 		"setexpr update_nand_fcb ${fcb_sz} * ${nand_writesize}\0" \
-	"update_nand_full="		    /* Update FCB, DBBT and FW */ \
+	"update_nand_firmware_full=" /* Update FCB, DBBT and FW */ \
 		"if tftp ${update_nand_full_filename} ; then " \
 		"run update_nand_get_fcb_size ; " \
 		"nand scrub -y 0x0 ${filesize} ; " \
@@ -191,6 +193,55 @@
 		"nand write ${loadaddr} ${fcb_sz} ${filesize} ; " \
 		"nand write ${loadaddr} ${fw_off} ${filesize} ; " \
 		"fi\0" \
+	"update_nand_kernel="		/* Update kernel */ \
+		"mtdparts default; " \
+		"nand erase.part kernel; " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"${get_cmd} ${image}; " \
+		"nand write ${loadaddr} kernel ${filesize}\0" \
+	"update_nand_fdt="		/* Update fdt */ \
+		"mtdparts default; " \
+		"nand erase.part fdt; " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"${get_cmd} ${fdt_file}; " \
+		"nand write ${loadaddr} fdt ${filesize}\0" \
+	"update_nand_filesystem="		/* Update filesystem */ \
+		"mtdparts default; " \
+		"nand erase.part filesystem; " \
+		"if test ${ip_dyn} = yes; then " \
+			"setenv get_cmd dhcp; " \
+		"else " \
+			"setenv get_cmd tftp; " \
+		"fi; " \
+		"${get_cmd} ${ubifs_file}; " \
+		"ubi part filesystem; " \
+		"ubi create filesystem; " \
+		"ubi write ${loadaddr} filesystem ${filesize}\0" \
+	"nandargs=setenv bootargs console=${console_mainline},${baudrate} " \
+		"rootfstype=ubifs ubi.mtd=6 root=ubi0_0 ${mtdparts}\0" \
+	"nandboot="		/* Boot from NAND */ \
+		"mtdparts default; " \
+		"run nandargs; " \
+		"nand read ${loadaddr} kernel 0x00400000; " \
+		"if test ${boot_fdt} = yes; then " \
+			"nand read ${fdt_addr} fdt 0x00080000; " \
+			"bootz ${loadaddr} - ${fdt_addr}; " \
+		"else " \
+			"if test ${boot_fdt} = no; then " \
+				"bootz; " \
+			"else " \
+				"echo \"ERROR: Set boot_fdt to yes or no.\"; " \
+			"fi; " \
+		"fi\0" \
+	"update_sd_firmware_filename=u-boot.sd\0" \
 	"update_sd_firmware="		/* Update the SD firmware partition */ \
 		"if mmc rescan ; then "	\
 		"if tftp ${update_sd_firmware_filename} ; then " \
@@ -200,7 +251,7 @@
 		"fi ; "	\
 		"fi\0" \
 	"script=boot.scr\0"	\
-	"uimage=uImage\0" \
+	"image=zImage\0" \
 	"console_fsl=ttyAM0\0" \
 	"console_mainline=ttyAMA0\0" \
 	"fdt_file=imx28-evk.dtb\0" \
@@ -216,22 +267,22 @@
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
 	"bootscript=echo Running bootscript from mmc ...; "	\
 		"source\0" \
-	"loaduimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${uimage}\0" \
+	"loadimage=fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${image}\0" \
 	"loadfdt=fatload mmc ${mmcdev}:${mmcpart} ${fdt_addr} ${fdt_file}\0" \
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
-				"bootm ${loadaddr} - ${fdt_addr}; " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
-					"bootm; " \
+					"bootz; " \
 				"else " \
 					"echo WARN: Cannot load the DT; " \
 				"fi; " \
 			"fi; " \
 		"else " \
-			"bootm; " \
+			"bootz; " \
 		"fi;\0" \
 	"netargs=setenv bootargs console=${console_mainline},${baudrate} " \
 		"root=/dev/nfs " \
@@ -243,19 +294,19 @@
 		"else " \
 			"setenv get_cmd tftp; " \
 		"fi; " \
-		"${get_cmd} ${uimage}; " \
+		"${get_cmd} ${image}; " \
 		"if test ${boot_fdt} = yes; then " \
 			"if ${get_cmd} ${fdt_addr} ${fdt_file}; then " \
-				"bootm ${loadaddr} - ${fdt_addr}; " \
+				"bootz ${loadaddr} - ${fdt_addr}; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
-					"bootm; " \
+					"bootz; " \
 				"else " \
 					"echo WARN: Cannot load the DT; " \
 				"fi;" \
 			"fi; " \
 		"else " \
-			"bootm; " \
+			"bootz; " \
 		"fi;\0"
 
 #define CONFIG_BOOTCOMMAND \
@@ -263,7 +314,7 @@
 		"if run loadbootscript; then " \
 			"run bootscript; " \
 		"else " \
-			"if run loaduimage; then " \
+			"if run loadimage; then " \
 				"run mmcboot; " \
 			"else run netboot; " \
 			"fi; " \

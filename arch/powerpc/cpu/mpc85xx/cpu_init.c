@@ -19,6 +19,7 @@
 #include <asm/io.h>
 #include <asm/cache.h>
 #include <asm/mmu.h>
+#include <asm/fsl_errata.h>
 #include <asm/fsl_law.h>
 #include <asm/fsl_serdes.h>
 #include <asm/fsl_srio.h>
@@ -32,10 +33,84 @@
 #endif
 
 #include "../../../../drivers/block/fsl_sata.h"
+#ifdef CONFIG_U_QE
+#include "../../../../drivers/qe/qe.h"
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#ifdef CONFIG_QE
+#ifdef CONFIG_SYS_FSL_SINGLE_SOURCE_CLK
+/*
+ * For deriving usb clock from 100MHz sysclk, reference divisor is set
+ * to a value of 5, which gives an intermediate value 20(100/5). The
+ * multiplication factor integer is set to 24, which when multiplied to
+ * above intermediate value provides clock for usb ip.
+ */
+void usb_single_source_clk_configure(struct ccsr_usb_phy *usb_phy)
+{
+	sys_info_t sysinfo;
+
+	get_sys_info(&sysinfo);
+	if (sysinfo.diff_sysclk == 1) {
+		clrbits_be32(&usb_phy->pllprg[1],
+			     CONFIG_SYS_FSL_USB_PLLPRG2_MFI);
+		setbits_be32(&usb_phy->pllprg[1],
+			     CONFIG_SYS_FSL_USB_PLLPRG2_REF_DIV_INTERNAL_CLK |
+			     CONFIG_SYS_FSL_USB_PLLPRG2_MFI_INTERNAL_CLK |
+			     CONFIG_SYS_FSL_USB_INTERNAL_SOC_CLK_EN);
+		}
+}
+#endif
+
+#ifdef CONFIG_SYS_FSL_ERRATUM_A006261
+void fsl_erratum_a006261_workaround(struct ccsr_usb_phy __iomem *usb_phy)
+{
+#ifdef CONFIG_SYS_FSL_USB_DUAL_PHY_ENABLE
+	u32 xcvrprg = in_be32(&usb_phy->port1.xcvrprg);
+
+	/* Increase Disconnect Threshold by 50mV */
+	xcvrprg &= ~CONFIG_SYS_FSL_USB_XCVRPRG_HS_DCNT_PROG_MASK |
+						INC_DCNT_THRESHOLD_50MV;
+	/* Enable programming of USB High speed Disconnect threshold */
+	xcvrprg |= CONFIG_SYS_FSL_USB_XCVRPRG_HS_DCNT_PROG_EN;
+	out_be32(&usb_phy->port1.xcvrprg, xcvrprg);
+
+	xcvrprg = in_be32(&usb_phy->port2.xcvrprg);
+	/* Increase Disconnect Threshold by 50mV */
+	xcvrprg &= ~CONFIG_SYS_FSL_USB_XCVRPRG_HS_DCNT_PROG_MASK |
+						INC_DCNT_THRESHOLD_50MV;
+	/* Enable programming of USB High speed Disconnect threshold */
+	xcvrprg |= CONFIG_SYS_FSL_USB_XCVRPRG_HS_DCNT_PROG_EN;
+	out_be32(&usb_phy->port2.xcvrprg, xcvrprg);
+#else
+
+	u32 temp = 0;
+	u32 status = in_be32(&usb_phy->status1);
+
+	u32 squelch_prog_rd_0_2 =
+		(status >> CONFIG_SYS_FSL_USB_SQUELCH_PROG_RD_0)
+			& CONFIG_SYS_FSL_USB_SQUELCH_PROG_MASK;
+
+	u32 squelch_prog_rd_3_5 =
+		(status >> CONFIG_SYS_FSL_USB_SQUELCH_PROG_RD_3)
+			& CONFIG_SYS_FSL_USB_SQUELCH_PROG_MASK;
+
+	setbits_be32(&usb_phy->config1,
+		     CONFIG_SYS_FSL_USB_HS_DISCNCT_INC);
+	setbits_be32(&usb_phy->config2,
+		     CONFIG_SYS_FSL_USB_RX_AUTO_CAL_RD_WR_SEL);
+
+	temp = squelch_prog_rd_0_2 << CONFIG_SYS_FSL_USB_SQUELCH_PROG_WR_0;
+	out_be32(&usb_phy->config2, in_be32(&usb_phy->config2) | temp);
+
+	temp = squelch_prog_rd_3_5 << CONFIG_SYS_FSL_USB_SQUELCH_PROG_WR_3;
+	out_be32(&usb_phy->config2, in_be32(&usb_phy->config2) | temp);
+#endif
+}
+#endif
+
+
+#if defined(CONFIG_QE) && !defined(CONFIG_U_QE)
 extern qe_iop_conf_t qe_iop_conf_tab[];
 extern void qe_config_iopin(u8 port, u8 pin, int dir,
 				int open_drain, int assign);
@@ -124,17 +199,14 @@ void config_8560_ioports (volatile ccsr_cpm_t * cpm)
 #endif
 
 #ifdef CONFIG_SYS_FSL_CPC
-static void enable_cpc(void)
+#if defined(CONFIG_RAMBOOT_PBL) || defined(CONFIG_SYS_CPC_REINIT_F)
+static void disable_cpc_sram(void)
 {
 	int i;
-	u32 size = 0;
 
 	cpc_corenet_t *cpc = (cpc_corenet_t *)CONFIG_SYS_FSL_CPC_ADDR;
 
 	for (i = 0; i < CONFIG_SYS_NUM_CPC; i++, cpc++) {
-		u32 cpccfg0 = in_be32(&cpc->cpccfg0);
-		size += CPC_CFG0_SZ_K(cpccfg0);
-#ifdef CONFIG_RAMBOOT_PBL
 		if (in_be32(&cpc->cpcsrcr0) & CPC_SRCR0_SRAMEN) {
 			/* find and disable LAW of SRAM */
 			struct law_entry law = find_law(CONFIG_SYS_INIT_L3_ADDR);
@@ -149,7 +221,46 @@ static void enable_cpc(void)
 			out_be32(&cpc->cpccsr0, 0);
 			out_be32(&cpc->cpcsrcr0, 0);
 		}
+	}
+}
 #endif
+
+#if defined(T1040_TDM_QUIRK_CCSR_BASE)
+#ifdef CONFIG_POST
+#error POST memory test cannot be enabled with TDM
+#endif
+static void enable_tdm_law(void)
+{
+	int ret;
+	char buffer[HWCONFIG_BUFFER_SIZE] = {0};
+	int tdm_hwconfig_enabled = 0;
+
+	/*
+	 * Extract hwconfig from environment since environment
+	 * is not setup properly yet. Search for tdm entry in
+	 * hwconfig.
+	 */
+	ret = getenv_f("hwconfig", buffer, sizeof(buffer));
+	if (ret > 0) {
+		tdm_hwconfig_enabled = hwconfig_f("tdm", buffer);
+		/* If tdm is defined in hwconfig, set law for tdm workaround */
+		if (tdm_hwconfig_enabled)
+			set_next_law(T1040_TDM_QUIRK_CCSR_BASE, LAW_SIZE_16M,
+				     LAW_TRGT_IF_CCSR);
+	}
+}
+#endif
+
+static void enable_cpc(void)
+{
+	int i;
+	u32 size = 0;
+
+	cpc_corenet_t *cpc = (cpc_corenet_t *)CONFIG_SYS_FSL_CPC_ADDR;
+
+	for (i = 0; i < CONFIG_SYS_NUM_CPC; i++, cpc++) {
+		u32 cpccfg0 = in_be32(&cpc->cpccfg0);
+		size += CPC_CFG0_SZ_K(cpccfg0);
 
 #ifdef CONFIG_SYS_FSL_ERRATUM_CPC_A002
 		setbits_be32(&cpc->cpchdbcr0, CPC_HDBCR0_TAG_ECC_SCRUB_DIS);
@@ -159,6 +270,12 @@ static void enable_cpc(void)
 #endif
 #ifdef CONFIG_SYS_FSL_ERRATUM_A006593
 		setbits_be32(&cpc->cpchdbcr0, 1 << (31 - 21));
+#endif
+#ifdef CONFIG_SYS_FSL_ERRATUM_A006379
+		if (has_erratum_a006379()) {
+			setbits_be32(&cpc->cpchdbcr0,
+				     CPC_HDBCR0_SPLRU_LEVEL_EN);
+		}
 #endif
 
 		out_be32(&cpc->cpccsr0, CPC_CSR0_CE | CPC_CSR0_PE);
@@ -212,8 +329,74 @@ static void corenet_tb_init(void)
 }
 #endif
 
-void cpu_init_f (void)
+#ifdef CONFIG_SYS_FSL_ERRATUM_A007212
+void fsl_erratum_a007212_workaround(void)
 {
+	ccsr_gur_t __iomem *gur = (void *)(CONFIG_SYS_MPC85xx_GUTS_ADDR);
+	u32 ddr_pll_ratio;
+	u32 __iomem *plldgdcr1 = (void *)(CONFIG_SYS_DCSRBAR + 0x21c20);
+	u32 __iomem *plldadcr1 = (void *)(CONFIG_SYS_DCSRBAR + 0x21c28);
+	u32 __iomem *dpdovrcr4 = (void *)(CONFIG_SYS_DCSRBAR + 0x21e80);
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 2)
+	u32 __iomem *plldgdcr2 = (void *)(CONFIG_SYS_DCSRBAR + 0x21c40);
+	u32 __iomem *plldadcr2 = (void *)(CONFIG_SYS_DCSRBAR + 0x21c48);
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 3)
+	u32 __iomem *plldgdcr3 = (void *)(CONFIG_SYS_DCSRBAR + 0x21c60);
+	u32 __iomem *plldadcr3 = (void *)(CONFIG_SYS_DCSRBAR + 0x21c68);
+#endif
+#endif
+	/*
+	 * Even this workaround applies to selected version of SoCs, it is
+	 * safe to apply to all versions, with the limitation of odd ratios.
+	 * If RCW has disabled DDR PLL, we have to apply this workaround,
+	 * otherwise DDR will not work.
+	 */
+	ddr_pll_ratio = (in_be32(&gur->rcwsr[0]) >>
+		FSL_CORENET_RCWSR0_MEM_PLL_RAT_SHIFT) &
+		FSL_CORENET_RCWSR0_MEM_PLL_RAT_MASK;
+	/* check if RCW sets ratio to 0, required by this workaround */
+	if (ddr_pll_ratio != 0)
+		return;
+	ddr_pll_ratio = (in_be32(&gur->rcwsr[0]) >>
+		FSL_CORENET_RCWSR0_MEM_PLL_RAT_RESV_SHIFT) &
+		FSL_CORENET_RCWSR0_MEM_PLL_RAT_MASK;
+	/* check if reserved bits have the desired ratio */
+	if (ddr_pll_ratio == 0) {
+		printf("Error: Unknown DDR PLL ratio!\n");
+		return;
+	}
+	ddr_pll_ratio >>= 1;
+
+	setbits_be32(plldadcr1, 0x02000001);
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 2)
+	setbits_be32(plldadcr2, 0x02000001);
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 3)
+	setbits_be32(plldadcr3, 0x02000001);
+#endif
+#endif
+	setbits_be32(dpdovrcr4, 0xe0000000);
+	out_be32(plldgdcr1, 0x08000001 | (ddr_pll_ratio << 1));
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 2)
+	out_be32(plldgdcr2, 0x08000001 | (ddr_pll_ratio << 1));
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 3)
+	out_be32(plldgdcr3, 0x08000001 | (ddr_pll_ratio << 1));
+#endif
+#endif
+	udelay(100);
+	clrbits_be32(plldadcr1, 0x02000001);
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 2)
+	clrbits_be32(plldadcr2, 0x02000001);
+#if (CONFIG_NUM_DDR_CONTROLLERS >= 3)
+	clrbits_be32(plldadcr3, 0x02000001);
+#endif
+#endif
+	clrbits_be32(dpdovrcr4, 0xe0000000);
+}
+#endif
+
+ulong cpu_init_f(void)
+{
+	ulong flag = 0;
 	extern void m8560_cpm_reset (void);
 #ifdef CONFIG_SYS_DCSRBAR_PHYS
 	ccsr_gur_t *gur = (void *)(CONFIG_SYS_MPC85xx_GUTS_ADDR);
@@ -243,6 +426,10 @@ void cpu_init_f (void)
 	law = find_law(CONFIG_SYS_PBI_FLASH_BASE);
 	if (law.index != -1)
 		disable_law(law.index);
+
+#if defined(CONFIG_SYS_CPC_REINIT_F)
+	disable_cpc_sram();
+#endif
 #endif
 
 #ifdef CONFIG_CPM2
@@ -254,10 +441,12 @@ void cpu_init_f (void)
 #if defined(CONFIG_CPM2)
 	m8560_cpm_reset();
 #endif
-#ifdef CONFIG_QE
+
+#if defined(CONFIG_QE) && !defined(CONFIG_U_QE)
 	/* Config QE ioports */
 	config_qe_ioports();
 #endif
+
 #if defined(CONFIG_FSL_DMA)
 	dma_init();
 #endif
@@ -275,6 +464,18 @@ void cpu_init_f (void)
 	in_be32(&gur->dcsrcr);
 #endif
 
+#ifdef CONFIG_SYS_DCSRBAR_PHYS
+#ifdef CONFIG_DEEP_SLEEP
+	/* disable the console if boot from deep sleep */
+	if (in_be32(&gur->scrtsr[0]) & (1 << 3))
+		flag = GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE;
+#endif
+#endif
+#ifdef CONFIG_SYS_FSL_ERRATUM_A007212
+	fsl_erratum_a007212_workaround();
+#endif
+
+	return flag;
 }
 
 /* Implement a dummy function for those platforms w/o SERDES */
@@ -284,13 +485,20 @@ static void __fsl_serdes__init(void)
 }
 __attribute__((weak, alias("__fsl_serdes__init"))) void fsl_serdes_init(void);
 
-#ifdef CONFIG_SYS_FSL_QORIQ_CHASSIS2
+#if defined(CONFIG_SYS_FSL_QORIQ_CHASSIS2) && defined(CONFIG_E6500)
 int enable_cluster_l2(void)
 {
 	int i = 0;
-	u32 cluster;
+	u32 cluster, svr = get_svr();
 	ccsr_gur_t *gur = (void __iomem *)(CONFIG_SYS_MPC85xx_GUTS_ADDR);
 	struct ccsr_cluster_l2 __iomem *l2cache;
+
+	/* only the L2 of first cluster should be enabled as expected on T4080,
+	 * but there is no EOC in the first cluster as HW sake, so return here
+	 * to skip enabling L2 cache of the 2nd cluster.
+	 */
+	if (SVR_SOC_VER(svr) == SVR_T4080)
+		return 0;
 
 	cluster = in_be32(&gur->tp_cluster[i].lower);
 	if (cluster & TP_CLUSTER_EOC)
@@ -350,7 +558,7 @@ int cpu_init_r(void)
 #endif
 #ifdef CONFIG_L2_CACHE
 	ccsr_l2cache_t *l2cache = (void __iomem *)CONFIG_SYS_MPC85xx_L2_ADDR;
-#elif defined(CONFIG_SYS_FSL_QORIQ_CHASSIS2)
+#elif defined(CONFIG_SYS_FSL_QORIQ_CHASSIS2) && defined(CONFIG_E6500)
 	struct ccsr_cluster_l2 * l2cache = (void __iomem *)CONFIG_SYS_FSL_CLUSTER_1_L2;
 #endif
 #if defined(CONFIG_PPC_SPINTABLE_COMPATIBLE) && defined(CONFIG_MP)
@@ -533,7 +741,7 @@ int cpu_init_r(void)
 	}
 
 skip_l2:
-#elif defined(CONFIG_SYS_FSL_QORIQ_CHASSIS2)
+#elif defined(CONFIG_SYS_FSL_QORIQ_CHASSIS2) && defined(CONFIG_E6500)
 	if (l2cache->l2csr0 & L2CSR0_L2E)
 		print_size((l2cache->l2cfg0 & 0x3fff) * 64 * 1024,
 			   " enabled\n");
@@ -543,7 +751,13 @@ skip_l2:
 	puts("disabled\n");
 #endif
 
+#if defined(CONFIG_RAMBOOT_PBL)
+	disable_cpc_sram();
+#endif
 	enable_cpc();
+#if defined(T1040_TDM_QUIRK_CCSR_BASE)
+	enable_tdm_law();
+#endif
 
 #ifndef CONFIG_SYS_FSL_NO_SERDES
 	/* needs to be in ram since code uses global static vars */
@@ -618,6 +832,10 @@ skip_l2:
 	{
 		struct ccsr_usb_phy __iomem *usb_phy1 =
 			(void *)CONFIG_SYS_MPC85xx_USB1_PHY_ADDR;
+#ifdef CONFIG_SYS_FSL_ERRATUM_A006261
+		if (has_erratum_a006261())
+			fsl_erratum_a006261_workaround(usb_phy1);
+#endif
 		out_be32(&usb_phy1->usb_enable_override,
 				CONFIG_SYS_FSL_USB_ENABLE_OVERRIDE);
 	}
@@ -626,6 +844,10 @@ skip_l2:
 	{
 		struct ccsr_usb_phy __iomem *usb_phy2 =
 			(void *)CONFIG_SYS_MPC85xx_USB2_PHY_ADDR;
+#ifdef CONFIG_SYS_FSL_ERRATUM_A006261
+		if (has_erratum_a006261())
+			fsl_erratum_a006261_workaround(usb_phy2);
+#endif
 		out_be32(&usb_phy2->usb_enable_override,
 				CONFIG_SYS_FSL_USB_ENABLE_OVERRIDE);
 	}
@@ -653,6 +875,9 @@ skip_l2:
 			     CONFIG_SYS_FSL_USB_PLLPRG2_PHY1_CLK_EN |
 			     CONFIG_SYS_FSL_USB_PLLPRG2_MFI |
 			     CONFIG_SYS_FSL_USB_PLLPRG2_PLL_EN);
+#ifdef CONFIG_SYS_FSL_SINGLE_SOURCE_CLK
+		usb_single_source_clk_configure(usb_phy);
+#endif
 		setbits_be32(&usb_phy->port1.ctrl,
 			     CONFIG_SYS_FSL_USB_CTRL_PHY_EN);
 		setbits_be32(&usb_phy->port1.drvvbuscfg,
@@ -665,7 +890,13 @@ skip_l2:
 			     CONFIG_SYS_FSL_USB_DRVVBUS_CR_EN);
 		setbits_be32(&usb_phy->port2.pwrfltcfg,
 			     CONFIG_SYS_FSL_USB_PWRFLT_CR_EN);
+
+#ifdef CONFIG_SYS_FSL_ERRATUM_A006261
+		if (has_erratum_a006261())
+			fsl_erratum_a006261_workaround(usb_phy);
 #endif
+
+#endif /* CONFIG_SYS_FSL_USB_DUAL_PHY_ENABLE */
 
 #ifdef CONFIG_FMAN_ENET
 	fman_enet_init();
@@ -694,11 +925,10 @@ skip_l2:
 	}
 #endif
 
+	init_used_tlb_cams();
 
 	return 0;
 }
-
-extern void setup_ivors(void);
 
 void arch_preboot_os(void)
 {
@@ -712,8 +942,6 @@ void arch_preboot_os(void)
 	msr = mfmsr();
 	msr &= ~(MSR_ME|MSR_CE);
 	mtmsr(msr);
-
-	setup_ivors();
 }
 
 #if defined(CONFIG_CMD_SATA) && defined(CONFIG_FSL_SATA)
@@ -728,21 +956,13 @@ int sata_initialize(void)
 
 void cpu_secondary_init_r(void)
 {
-#ifdef CONFIG_QE
+#ifdef CONFIG_U_QE
+	uint qe_base = CONFIG_SYS_IMMR + 0x00140000; /* QE immr base */
+#elif defined CONFIG_QE
 	uint qe_base = CONFIG_SYS_IMMR + 0x00080000; /* QE immr base */
-#ifdef CONFIG_SYS_QE_FMAN_FW_IN_NAND
-	int ret;
-	size_t fw_length = CONFIG_SYS_QE_FMAN_FW_LENGTH;
-
-	/* load QE firmware from NAND flash to DDR first */
-	ret = nand_read(&nand_info[0], (loff_t)CONFIG_SYS_QE_FMAN_FW_IN_NAND,
-			&fw_length, (u_char *)CONFIG_SYS_QE_FMAN_FW_ADDR);
-
-	if (ret && ret == -EUCLEAN) {
-		printf ("NAND read for QE firmware at offset %x failed %d\n",
-				CONFIG_SYS_QE_FMAN_FW_IN_NAND, ret);
-	}
 #endif
+
+#ifdef CONFIG_QE
 	qe_init(qe_base);
 	qe_reset();
 #endif

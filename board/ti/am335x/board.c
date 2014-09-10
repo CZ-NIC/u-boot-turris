@@ -28,6 +28,9 @@
 #include <cpsw.h>
 #include <power/tps65217.h>
 #include <power/tps65910.h>
+#include <environment.h>
+#include <watchdog.h>
+#include <environment.h>
 #include "board.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -79,7 +82,7 @@ static int read_eeprom(struct am335x_baseboard_id *header)
 	return 0;
 }
 
-#if defined(CONFIG_SPL_BUILD) || defined(CONFIG_NOR_BOOT)
+#ifndef CONFIG_SKIP_LOWLEVEL_INIT
 static const struct ddr_data ddr2_data = {
 	.datardsratio0 = ((MT47H128M16RT25E_RD_DQS<<30) |
 			  (MT47H128M16RT25E_RD_DQS<<20) |
@@ -105,21 +108,16 @@ static const struct ddr_data ddr2_data = {
 			  (MT47H128M16RT25E_PHY_WR_DATA<<20) |
 			  (MT47H128M16RT25E_PHY_WR_DATA<<10) |
 			  (MT47H128M16RT25E_PHY_WR_DATA<<0)),
-	.datauserank0delay = MT47H128M16RT25E_PHY_RANK0_DELAY,
-	.datadldiff0 = PHY_DLL_LOCK_DIFF,
 };
 
 static const struct cmd_control ddr2_cmd_ctrl_data = {
 	.cmd0csratio = MT47H128M16RT25E_RATIO,
-	.cmd0dldiff = MT47H128M16RT25E_DLL_LOCK_DIFF,
 	.cmd0iclkout = MT47H128M16RT25E_INVERT_CLKOUT,
 
 	.cmd1csratio = MT47H128M16RT25E_RATIO,
-	.cmd1dldiff = MT47H128M16RT25E_DLL_LOCK_DIFF,
 	.cmd1iclkout = MT47H128M16RT25E_INVERT_CLKOUT,
 
 	.cmd2csratio = MT47H128M16RT25E_RATIO,
-	.cmd2dldiff = MT47H128M16RT25E_DLL_LOCK_DIFF,
 	.cmd2iclkout = MT47H128M16RT25E_INVERT_CLKOUT,
 };
 
@@ -137,7 +135,6 @@ static const struct ddr_data ddr3_data = {
 	.datawdsratio0 = MT41J128MJT125_WR_DQS,
 	.datafwsratio0 = MT41J128MJT125_PHY_FIFO_WE,
 	.datawrsratio0 = MT41J128MJT125_PHY_WR_DATA,
-	.datadldiff0 = PHY_DLL_LOCK_DIFF,
 };
 
 static const struct ddr_data ddr3_beagleblack_data = {
@@ -145,7 +142,6 @@ static const struct ddr_data ddr3_beagleblack_data = {
 	.datawdsratio0 = MT41K256M16HA125E_WR_DQS,
 	.datafwsratio0 = MT41K256M16HA125E_PHY_FIFO_WE,
 	.datawrsratio0 = MT41K256M16HA125E_PHY_WR_DATA,
-	.datadldiff0 = PHY_DLL_LOCK_DIFF,
 };
 
 static const struct ddr_data ddr3_evm_data = {
@@ -153,48 +149,38 @@ static const struct ddr_data ddr3_evm_data = {
 	.datawdsratio0 = MT41J512M8RH125_WR_DQS,
 	.datafwsratio0 = MT41J512M8RH125_PHY_FIFO_WE,
 	.datawrsratio0 = MT41J512M8RH125_PHY_WR_DATA,
-	.datadldiff0 = PHY_DLL_LOCK_DIFF,
 };
 
 static const struct cmd_control ddr3_cmd_ctrl_data = {
 	.cmd0csratio = MT41J128MJT125_RATIO,
-	.cmd0dldiff = MT41J128MJT125_DLL_LOCK_DIFF,
 	.cmd0iclkout = MT41J128MJT125_INVERT_CLKOUT,
 
 	.cmd1csratio = MT41J128MJT125_RATIO,
-	.cmd1dldiff = MT41J128MJT125_DLL_LOCK_DIFF,
 	.cmd1iclkout = MT41J128MJT125_INVERT_CLKOUT,
 
 	.cmd2csratio = MT41J128MJT125_RATIO,
-	.cmd2dldiff = MT41J128MJT125_DLL_LOCK_DIFF,
 	.cmd2iclkout = MT41J128MJT125_INVERT_CLKOUT,
 };
 
 static const struct cmd_control ddr3_beagleblack_cmd_ctrl_data = {
 	.cmd0csratio = MT41K256M16HA125E_RATIO,
-	.cmd0dldiff = MT41K256M16HA125E_DLL_LOCK_DIFF,
 	.cmd0iclkout = MT41K256M16HA125E_INVERT_CLKOUT,
 
 	.cmd1csratio = MT41K256M16HA125E_RATIO,
-	.cmd1dldiff = MT41K256M16HA125E_DLL_LOCK_DIFF,
 	.cmd1iclkout = MT41K256M16HA125E_INVERT_CLKOUT,
 
 	.cmd2csratio = MT41K256M16HA125E_RATIO,
-	.cmd2dldiff = MT41K256M16HA125E_DLL_LOCK_DIFF,
 	.cmd2iclkout = MT41K256M16HA125E_INVERT_CLKOUT,
 };
 
 static const struct cmd_control ddr3_evm_cmd_ctrl_data = {
 	.cmd0csratio = MT41J512M8RH125_RATIO,
-	.cmd0dldiff = MT41J512M8RH125_DLL_LOCK_DIFF,
 	.cmd0iclkout = MT41J512M8RH125_INVERT_CLKOUT,
 
 	.cmd1csratio = MT41J512M8RH125_RATIO,
-	.cmd1dldiff = MT41J512M8RH125_DLL_LOCK_DIFF,
 	.cmd1iclkout = MT41J512M8RH125_INVERT_CLKOUT,
 
 	.cmd2csratio = MT41J512M8RH125_RATIO,
-	.cmd2dldiff = MT41J512M8RH125_DLL_LOCK_DIFF,
 	.cmd2iclkout = MT41J512M8RH125_INVERT_CLKOUT,
 };
 
@@ -234,7 +220,17 @@ static struct emif_regs ddr3_evm_emif_reg_data = {
 int spl_start_uboot(void)
 {
 	/* break into full u-boot on 'c' */
-	return (serial_tstc() && serial_getc() == 'c');
+	if (serial_tstc() && serial_getc() == 'c')
+		return 1;
+
+#ifdef CONFIG_SPL_ENV_SUPPORT
+	env_init();
+	env_relocate_spec();
+	if (getenv_yesno("boot_os") != 1)
+		return 1;
+#endif
+
+	return 0;
 }
 #endif
 
@@ -395,7 +391,7 @@ const struct dpll_params *get_dpll_ddr_params(void)
 	struct am335x_baseboard_id header;
 
 	enable_i2c0_pin_mux();
-	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
+	i2c_init(CONFIG_SYS_OMAP24_I2C_SPEED, CONFIG_SYS_OMAP24_I2C_SLAVE);
 	if (read_eeprom(&header) < 0)
 		puts("Could not get board ID.\n");
 
@@ -441,6 +437,38 @@ void set_mux_conf_regs(void)
 	enable_board_pin_mux(&header);
 }
 
+const struct ctrl_ioregs ioregs_evmsk = {
+	.cm0ioctl		= MT41J128MJT125_IOCTRL_VALUE,
+	.cm1ioctl		= MT41J128MJT125_IOCTRL_VALUE,
+	.cm2ioctl		= MT41J128MJT125_IOCTRL_VALUE,
+	.dt0ioctl		= MT41J128MJT125_IOCTRL_VALUE,
+	.dt1ioctl		= MT41J128MJT125_IOCTRL_VALUE,
+};
+
+const struct ctrl_ioregs ioregs_bonelt = {
+	.cm0ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.cm1ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.cm2ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.dt0ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+	.dt1ioctl		= MT41K256M16HA125E_IOCTRL_VALUE,
+};
+
+const struct ctrl_ioregs ioregs_evm15 = {
+	.cm0ioctl		= MT41J512M8RH125_IOCTRL_VALUE,
+	.cm1ioctl		= MT41J512M8RH125_IOCTRL_VALUE,
+	.cm2ioctl		= MT41J512M8RH125_IOCTRL_VALUE,
+	.dt0ioctl		= MT41J512M8RH125_IOCTRL_VALUE,
+	.dt1ioctl		= MT41J512M8RH125_IOCTRL_VALUE,
+};
+
+const struct ctrl_ioregs ioregs = {
+	.cm0ioctl		= MT47H128M16RT25E_IOCTRL_VALUE,
+	.cm1ioctl		= MT47H128M16RT25E_IOCTRL_VALUE,
+	.cm2ioctl		= MT47H128M16RT25E_IOCTRL_VALUE,
+	.dt0ioctl		= MT47H128M16RT25E_IOCTRL_VALUE,
+	.dt1ioctl		= MT47H128M16RT25E_IOCTRL_VALUE,
+};
+
 void sdram_init(void)
 {
 	__maybe_unused struct am335x_baseboard_id header;
@@ -458,18 +486,18 @@ void sdram_init(void)
 	}
 
 	if (board_is_evm_sk(&header))
-		config_ddr(303, MT41J128MJT125_IOCTRL_VALUE, &ddr3_data,
+		config_ddr(303, &ioregs_evmsk, &ddr3_data,
 			   &ddr3_cmd_ctrl_data, &ddr3_emif_reg_data, 0);
 	else if (board_is_bone_lt(&header))
-		config_ddr(400, MT41K256M16HA125E_IOCTRL_VALUE,
+		config_ddr(400, &ioregs_bonelt,
 			   &ddr3_beagleblack_data,
 			   &ddr3_beagleblack_cmd_ctrl_data,
 			   &ddr3_beagleblack_emif_reg_data, 0);
 	else if (board_is_evm_15_or_later(&header))
-		config_ddr(303, MT41J512M8RH125_IOCTRL_VALUE, &ddr3_evm_data,
+		config_ddr(303, &ioregs_evm15, &ddr3_evm_data,
 			   &ddr3_evm_cmd_ctrl_data, &ddr3_evm_emif_reg_data, 0);
 	else
-		config_ddr(266, MT47H128M16RT25E_IOCTRL_VALUE, &ddr2_data,
+		config_ddr(266, &ioregs, &ddr2_data,
 			   &ddr2_cmd_ctrl_data, &ddr2_emif_reg_data, 0);
 }
 #endif
@@ -479,22 +507,14 @@ void sdram_init(void)
  */
 int board_init(void)
 {
-#ifdef CONFIG_NOR
-	const u32 gpmc_nor[GPMC_MAX_REG] = { STNOR_GPMC_CONFIG1,
-		STNOR_GPMC_CONFIG2, STNOR_GPMC_CONFIG3, STNOR_GPMC_CONFIG4,
-		STNOR_GPMC_CONFIG5, STNOR_GPMC_CONFIG6, STNOR_GPMC_CONFIG7 };
+#if defined(CONFIG_HW_WATCHDOG)
+	hw_watchdog_init();
 #endif
 
 	gd->bd->bi_boot_params = CONFIG_SYS_SDRAM_BASE + 0x100;
-
+#if defined(CONFIG_NOR) || defined(CONFIG_NAND)
 	gpmc_init();
-
-#ifdef CONFIG_NOR
-	/* Reconfigure CS0 for NOR instead of NAND. */
-	enable_gpmc_cs_config(gpmc_nor, &gpmc_cfg->cs[0],
-			      CONFIG_SYS_FLASH_BASE, GPMC_SIZE_16M);
 #endif
-
 	return 0;
 }
 
@@ -535,12 +555,12 @@ static struct cpsw_slave_data cpsw_slaves[] = {
 	{
 		.slave_reg_ofs	= 0x208,
 		.sliver_reg_ofs	= 0xd80,
-		.phy_id		= 0,
+		.phy_addr	= 0,
 	},
 	{
 		.slave_reg_ofs	= 0x308,
 		.sliver_reg_ofs	= 0xdc0,
-		.phy_id		= 1,
+		.phy_addr	= 1,
 	},
 };
 
@@ -564,8 +584,22 @@ static struct cpsw_platform_data cpsw_data = {
 };
 #endif
 
-#if defined(CONFIG_DRIVER_TI_CPSW) || \
-	(defined(CONFIG_USB_ETHER) && defined(CONFIG_MUSB_GADGET))
+/*
+ * This function will:
+ * Read the eFuse for MAC addresses, and set ethaddr/eth1addr/usbnet_devaddr
+ * in the environment
+ * Perform fixups to the PHY present on certain boards.  We only need this
+ * function in:
+ * - SPL with either CPSW or USB ethernet support
+ * - Full U-Boot, with either CPSW or USB ethernet
+ * Build in only these cases to avoid warnings about unused variables
+ * when we build an SPL that has neither option but full U-Boot will.
+ */
+#if ((defined(CONFIG_SPL_ETH_SUPPORT) || defined(CONFIG_SPL_USBETH_SUPPORT)) \
+		&& defined(CONFIG_SPL_BUILD)) || \
+	((defined(CONFIG_DRIVER_TI_CPSW) || \
+	  defined(CONFIG_USB_ETHER) && defined(CONFIG_MUSB_GADGET)) && \
+	 !defined(CONFIG_SPL_BUILD))
 int board_eth_init(bd_t *bis)
 {
 	int rv, n = 0;
@@ -593,6 +627,21 @@ int board_eth_init(bd_t *bis)
 	}
 
 #ifdef CONFIG_DRIVER_TI_CPSW
+
+	mac_lo = readl(&cdev->macid1l);
+	mac_hi = readl(&cdev->macid1h);
+	mac_addr[0] = mac_hi & 0xFF;
+	mac_addr[1] = (mac_hi & 0xFF00) >> 8;
+	mac_addr[2] = (mac_hi & 0xFF0000) >> 16;
+	mac_addr[3] = (mac_hi & 0xFF000000) >> 24;
+	mac_addr[4] = mac_lo & 0xFF;
+	mac_addr[5] = (mac_lo & 0xFF00) >> 8;
+
+	if (!getenv("eth1addr")) {
+		if (is_valid_ether_addr(mac_addr))
+			eth_setenv_enetaddr("eth1addr", mac_addr);
+	}
+
 	if (read_eeprom(&header) < 0)
 		puts("Could not get board ID.\n");
 

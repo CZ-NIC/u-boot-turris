@@ -12,7 +12,11 @@
 #define CONFIG_MACH_TYPE	3529
 #define CONFIG_MXC_UART_BASE	UART4_BASE
 #define CONFIG_CONSOLE_DEV		"ttymxc3"
+#if defined CONFIG_MX6Q
 #define CONFIG_DEFAULT_FDT_FILE	"imx6q-sabreauto.dtb"
+#elif defined CONFIG_MX6DL
+#define CONFIG_DEFAULT_FDT_FILE	"imx6dl-sabreauto.dtb"
+#endif
 #define CONFIG_MMCROOT			"/dev/mmcblk0p2"
 #define PHYS_SDRAM_SIZE		(2u * 1024 * 1024 * 1024)
 
@@ -23,7 +27,8 @@
 #define CONFIG_USB_STORAGE
 #define CONFIG_USB_HOST_ETHER
 #define CONFIG_USB_ETHER_ASIX
-#define CONFIG_MXC_USB_PORT	1
+#define CONFIG_USB_MAX_CONTROLLER_COUNT 2
+#define CONFIG_EHCI_HCD_INIT_AFTER_RESET	/* For OTG port */
 #define CONFIG_MXC_USB_PORTSC	(PORT_PTS_UTMI | PORT_PTS_PTW)
 #define CONFIG_MXC_USB_FLAGS	0
 
@@ -36,8 +41,11 @@
 
 /* I2C Configs */
 #define CONFIG_CMD_I2C
-#define CONFIG_I2C_MULTI_BUS
-#define CONFIG_I2C_MXC
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_I2C_MXC
 #define CONFIG_SYS_I2C_SPEED		100000
+
+#define CONFIG_OF_SEPARATE
+#define CONFIG_DEFAULT_DEVICE_TREE   imx6q-sabreauto
 
 #endif                         /* __MX6QSABREAUTO_CONFIG_H */

@@ -120,10 +120,6 @@ N: Dan A. Dickey
 E: ddickey@charter.net
 D: FADS Support
 
-N: James F. Dougherty
-E: jfd@GigabitNetworks.COM
-D: Port to the MOUSSE board
-
 N: Mike Dunn
 E: mikedunn@newsguy.com
 D: Palmtreo680 board, docg4 nand flash driver
@@ -143,7 +139,7 @@ W: www.freescale.com
 
 N: Dr. Wolfgang Grandegger
 E: wg@denx.de
-D: Support for Interphase 4539 T1/E1/J1 PMC, PN62, CCM, SCM boards
+D: Support for Interphase 4539 T1/E1/J1 PMC, CCM, SCM boards
 W: www.denx.de
 
 N: Peter Figuli

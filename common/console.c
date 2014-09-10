@@ -8,6 +8,7 @@
 #include <common.h>
 #include <stdarg.h>
 #include <malloc.h>
+#include <os.h>
 #include <serial.h>
 #include <stdio_dev.h>
 #include <exports.h>
@@ -415,6 +416,12 @@ static inline void print_pre_console_buffer(void) {}
 
 void putc(const char c)
 {
+#ifdef CONFIG_SANDBOX
+	if (!gd) {
+		os_putc(c);
+		return;
+	}
+#endif
 #ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
@@ -439,6 +446,13 @@ void putc(const char c)
 
 void puts(const char *s)
 {
+#ifdef CONFIG_SANDBOX
+	if (!gd) {
+		os_puts(s);
+		return;
+	}
+#endif
+
 #ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
@@ -467,7 +481,7 @@ int printf(const char *fmt, ...)
 	uint i;
 	char printbuffer[CONFIG_SYS_PBSIZE];
 
-#ifndef CONFIG_PRE_CONSOLE_BUFFER
+#if !defined(CONFIG_SANDBOX) && !defined(CONFIG_PRE_CONSOLE_BUFFER)
 	if (!gd->have_console)
 		return 0;
 #endif
@@ -523,7 +537,33 @@ int ctrlc(void)
 	}
 	return 0;
 }
+/* Reads user's confirmation.
+   Returns 1 if user's input is "y", "Y", "yes" or "YES"
+*/
+int confirm_yesno(void)
+{
+	int i;
+	char str_input[5];
 
+	/* Flush input */
+	while (tstc())
+		getc();
+	i = 0;
+	while (i < sizeof(str_input)) {
+		str_input[i] = getc();
+		putc(str_input[i]);
+		if (str_input[i] == '\r')
+			break;
+		i++;
+	}
+	putc('\n');
+	if (strncmp(str_input, "y\r", 2) == 0 ||
+	    strncmp(str_input, "Y\r", 2) == 0 ||
+	    strncmp(str_input, "yes\r", 4) == 0 ||
+	    strncmp(str_input, "YES\r", 4) == 0)
+		return 1;
+	return 0;
+}
 /* pass 1 to disable ctrlc() checking, 0 to enable.
  * returns previous state
  */

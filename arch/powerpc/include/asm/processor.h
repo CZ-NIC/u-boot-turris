@@ -7,8 +7,6 @@
  */
 #define current_text_addr() ({ __label__ _l; _l: &&_l;})
 
-#include <linux/config.h>
-
 #include <asm/ptrace.h>
 #include <asm/types.h>
 
@@ -1113,11 +1111,13 @@
 #define SVR_T4240	0x824000
 #define SVR_T4120	0x824001
 #define SVR_T4160	0x824100
+#define SVR_T4080	0x824102
 #define SVR_C291	0x850000
 #define SVR_C292	0x850020
 #define SVR_C293	0x850030
 #define SVR_B4860	0X868000
 #define SVR_G4860	0x868001
+#define SVR_B4460	0x868003
 #define SVR_G4060	0x868003
 #define SVR_B4440	0x868100
 #define SVR_G4440	0x868101
@@ -1129,6 +1129,8 @@
 #define SVR_T1020	0x852100
 #define SVR_T1021	0x852101
 #define SVR_T1022	0x852102
+#define SVR_T2080	0x853000
+#define SVR_T2081	0x853100
 
 #define SVR_8610	0x80A000
 #define SVR_8641	0x809000
@@ -1344,26 +1346,14 @@ void _nmask_and_or_msr(unsigned long nmask, unsigned long or_val);
 #if defined(CONFIG_8xx)
 #define _machine _MACH_8xx
 #define have_of 0
-#elif defined(CONFIG_OAK)
-#define _machine _MACH_oak
-#define have_of	0
 #elif defined(CONFIG_WALNUT)
 #define _machine _MACH_walnut
 #define have_of 0
-#elif defined(CONFIG_APUS)
-#define _machine _MACH_apus
-#define have_of 0
-#elif defined(CONFIG_GEMINI)
-#define _machine _MACH_gemini
-#define have_of 0
-#elif defined(CONFIG_8260)
+#elif defined(CONFIG_MPC8260)
 #define _machine _MACH_8260
 #define have_of 0
 #elif defined(CONFIG_SANDPOINT)
 #define _machine _MACH_sandpoint
-#elif defined(CONFIG_HIDDEN_DRAGON)
-#define _machine _MACH_hidden_dragon
-#define have_of 0
 #else
 #error "Machine not defined correctly"
 #endif

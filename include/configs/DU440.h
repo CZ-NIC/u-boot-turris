@@ -21,7 +21,6 @@
  */
 #define CONFIG_DU440		1		/* Board is esd DU440	*/
 #define CONFIG_440EPX		1		/* Specific PPC440EPx	*/
-#define CONFIG_4xx		1		/* ... PPC4xx family	*/
 #define CONFIG_SYS_CLK_FREQ	33333400	/* external freq to pll	*/
 
 #ifndef CONFIG_SYS_TEXT_BASE
@@ -310,7 +309,6 @@ int du440_phy_addr(int devnum);
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory		*/
-#define CONFIG_SYS_PROMPT	        "=> "	/* Monitor Command Prompt	*/
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE	        1024	/* Console I/O Buffer Size	*/
 #else
@@ -326,8 +324,6 @@ int du440_phy_addr(int devnum);
 
 #define CONFIG_SYS_LOAD_ADDR		0x100000  /* default load address	*/
 #define CONFIG_SYS_EXTBDINFO		1	/* To use extended board_into (bd_t) */
-
-#define CONFIG_SYS_HZ		        1000	/* decrementer freq: 1 ms ticks	*/
 
 #define CONFIG_CMDLINE_EDITING	1	/* add command line history	*/
 #define CONFIG_LOOPW            1       /* enable loopw command         */
@@ -409,7 +405,6 @@ int du440_phy_addr(int devnum);
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE	230400	/* speed to run kgdb serial port */
-#define CONFIG_KGDB_SER_INDEX	2	/* which serial port to use */
 #endif
 
 #define CONFIG_SOURCE		1

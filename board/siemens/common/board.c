@@ -42,7 +42,7 @@ void set_mux_conf_regs(void)
 {
 	/* Initalize the board header */
 	enable_i2c0_pin_mux();
-	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
+	i2c_set_bus_num(0);
 	if (read_eeprom() < 0)
 		puts("Could not get board ID.\n");
 
@@ -67,7 +67,7 @@ int board_init(void)
 #if defined(CONFIG_HW_WATCHDOG)
 	hw_watchdog_init();
 #endif /* defined(CONFIG_HW_WATCHDOG) */
-	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
+	i2c_set_bus_num(0);
 	if (read_eeprom() < 0)
 		puts("Could not get board ID.\n");
 
@@ -128,12 +128,6 @@ do_userbutton(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		button = 0;
 
 	gpio_free(gpio);
-	if (!button) {
-		/* LED0 - RED=1: GPIO2_0 2*32 = 64 */
-		gpio_request(BOARD_DFU_BUTTON_LED, "");
-		gpio_direction_output(BOARD_DFU_BUTTON_LED, 1);
-		gpio_set_value(BOARD_DFU_BUTTON_LED, 1);
-	}
 
 	return button;
 }
@@ -144,6 +138,46 @@ U_BOOT_CMD(
 	""
 );
 #endif
+/*
+ * This command sets led
+ * Input -	name of led
+ *		value of led
+ * Returns -	1 if input does not match
+ *		0 if led was set
+ */
+static int
+do_setled(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	int gpio = 0;
+	if (argc != 3)
+		goto exit;
+#if defined(BOARD_STATUS_LED)
+	if (!strcmp(argv[1], "stat"))
+		gpio = BOARD_STATUS_LED;
+#endif
+#if defined(BOARD_DFU_BUTTON_LED)
+	if (!strcmp(argv[1], "dfu"))
+		gpio = BOARD_DFU_BUTTON_LED;
+#endif
+	/* If argument does not mach exit */
+	if (gpio == 0)
+		goto exit;
+	gpio_request(gpio, "");
+	gpio_direction_output(gpio, 1);
+	if (!strcmp(argv[2], "1"))
+		gpio_set_value(gpio, 1);
+	else
+		gpio_set_value(gpio, 0);
+	return 0;
+exit:
+	return 1;
+}
+
+U_BOOT_CMD(
+	led, CONFIG_SYS_MAXARGS, 2, do_setled,
+	"Set led on or off",
+	"dfu val - set dfu led\nled stat val - set status led"
+);
 
 static int
 do_usertestwdt(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -159,13 +193,4 @@ U_BOOT_CMD(
 	"Sends U-Boot into infinite loop",
 	""
 );
-
-#ifndef CONFIG_SYS_DCACHE_OFF
-void enable_caches(void)
-{
-	printf("Enable d-cache\n");
-	/* Enable D-cache. I-cache is already enabled in start.S */
-	dcache_enable();
-}
-#endif /* CONFIG_SYS_DCACHE_OFF */
 #endif /* !CONFIG_SPL_BUILD */

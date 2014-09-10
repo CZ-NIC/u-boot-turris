@@ -101,9 +101,15 @@ void do_setup_dpll(const struct dpll_regs *dpll_regs,
 static void setup_dplls(void)
 {
 	const struct dpll_params *params;
-	do_setup_dpll(&dpll_core_regs, &dpll_core);
-	do_setup_dpll(&dpll_mpu_regs, &dpll_mpu);
-	do_setup_dpll(&dpll_per_regs, &dpll_per);
+
+	params = get_dpll_core_params();
+	do_setup_dpll(&dpll_core_regs, params);
+
+	params = get_dpll_mpu_params();
+	do_setup_dpll(&dpll_mpu_regs, params);
+
+	params = get_dpll_per_params();
+	do_setup_dpll(&dpll_per_regs, params);
 	writel(0x300, &cmwkup->clkdcoldodpllper);
 
 	params = get_dpll_ddr_params();
@@ -164,8 +170,19 @@ void do_enable_clocks(u32 *const *clk_domains,
 	};
 }
 
+/*
+ * Before scaling up the clocks we need to have the PMIC scale up the
+ * voltages first.  This will be dependent on which PMIC is in use
+ * and in some cases we may not be scaling things up at all and thus not
+ * need to do anything here.
+ */
+__weak void scale_vcores(void)
+{
+}
+
 void prcm_init()
 {
 	enable_basic_clocks();
+	scale_vcores();
 	setup_dplls();
 }

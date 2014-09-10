@@ -149,13 +149,9 @@ static int display_text_info(void)
 #ifndef CONFIG_SANDBOX
 	ulong bss_start, bss_end;
 
-#ifdef CONFIG_SYS_SYM_OFFSETS
-	bss_start = _bss_start_ofs + _TEXT_BASE;
-	bss_end = _bss_end_ofs + _TEXT_BASE;
-#else
 	bss_start = (ulong)&__bss_start;
 	bss_end = (ulong)&__bss_end;
-#endif
+
 	debug("U-Boot code: %08X -> %08lX  BSS: -> %08lX\n",
 	      CONFIG_SYS_TEXT_BASE, bss_start, bss_end);
 #endif
@@ -177,7 +173,7 @@ static int announce_dram_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_PPC
+#if defined(CONFIG_MIPS) || defined(CONFIG_PPC)
 static int init_func_ram(void)
 {
 #ifdef	CONFIG_BOARD_TYPES
@@ -198,7 +194,7 @@ static int init_func_ram(void)
 
 static int show_dram_config(void)
 {
-	ulong size;
+	unsigned long long size;
 
 #ifdef CONFIG_NR_DRAM_BANKS
 	int i;
@@ -225,8 +221,8 @@ static int show_dram_config(void)
 
 ulong get_effective_memsize(void)
 {
-	printf("DEBUG effective memsize: MAX=%x",CONFIG_MAX_MEM_MAPPED);
-	return 0x80000000
+	printf("DEBUG effective memsize: MAX=%lx",CONFIG_MAX_MEM_MAPPED);
+	return 0x80000000;
 /*#ifndef	CONFIG_VERY_BIG_RAM
 	return gd->ram_size;
 #else*/
@@ -251,7 +247,11 @@ void dram_init_banksize(void)
 static int init_func_i2c(void)
 {
 	puts("I2C:   ");
+#ifdef CONFIG_SYS_I2C
+	i2c_init_all();
+#else
 	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
+#endif
 	puts("ready\n");
 	return 0;
 }
@@ -277,8 +277,8 @@ static int zero_global_data(void)
 
 static int setup_mon_len(void)
 {
-#ifdef CONFIG_SYS_SYM_OFFSETS
-	gd->mon_len = _bss_end_ofs;
+#ifdef __ARM__
+	gd->mon_len = (ulong)&__bss_end - (ulong)_start;
 #elif defined(CONFIG_SANDBOX)
 	gd->mon_len = (ulong)&_end - (ulong)_init;
 #else
@@ -295,45 +295,39 @@ __weak int arch_cpu_init(void)
 
 #ifdef CONFIG_OF_HOSTFILE
 
-#define CHECK(x)		err = (x); if (err) goto failed;
-
-/* Create an empty device tree blob */
-static int make_empty_fdt(void *fdt)
-{
-	int err;
-
-	CHECK(fdt_create(fdt, 256));
-	CHECK(fdt_finish_reservemap(fdt));
-	CHECK(fdt_begin_node(fdt, ""));
-	CHECK(fdt_end_node(fdt));
-	CHECK(fdt_finish(fdt));
-
-	return 0;
-failed:
-	printf("Unable to create empty FDT: %s\n", fdt_strerror(err));
-	return -EACCES;
-}
-
 static int read_fdt_from_file(void)
 {
 	struct sandbox_state *state = state_get_current();
+	const char *fname = state->fdt_fname;
 	void *blob;
-	int size;
+	ssize_t size;
 	int err;
+	int fd;
 
 	blob = map_sysmem(CONFIG_SYS_FDT_LOAD_ADDR, 0);
 	if (!state->fdt_fname) {
-		err = make_empty_fdt(blob);
+		err = fdt_create_empty_tree(blob, 256);
 		if (!err)
 			goto done;
-		return err;
+		printf("Unable to create empty FDT: %s\n", fdt_strerror(err));
+		return -EINVAL;
 	}
-	err = fs_set_blk_dev("host", NULL, FS_TYPE_SANDBOX);
-	if (err)
-		return err;
-	size = fs_read(state->fdt_fname, CONFIG_SYS_FDT_LOAD_ADDR, 0, 0);
-	if (size < 0)
+
+	size = os_get_filesize(fname);
+	if (size < 0) {
+		printf("Failed to file FDT file '%s'\n", fname);
+		return -ENOENT;
+	}
+	fd = os_open(fname, OS_O_RDONLY);
+	if (fd < 0) {
+		printf("Failed to open FDT file '%s'\n", fname);
+		return -EACCES;
+	}
+	if (os_read(fd, blob, size) != size) {
+		os_close(fd);
 		return -EIO;
+	}
+	os_close(fd);
 
 done:
 	gd->fdt_blob = blob;
@@ -345,9 +339,10 @@ done:
 #ifdef CONFIG_SANDBOX
 static int setup_ram_buf(void)
 {
-	gd->arch.ram_buf = os_malloc(CONFIG_SYS_SDRAM_SIZE);
-	assert(gd->arch.ram_buf);
-	gd->ram_size = CONFIG_SYS_SDRAM_SIZE;
+	struct sandbox_state *state = state_get_current();
+
+	gd->arch.ram_buf = state->ram_buf;
+	gd->ram_size = state->ram_size;
 
 	return 0;
 }
@@ -357,14 +352,10 @@ static int setup_fdt(void)
 {
 #ifdef CONFIG_OF_EMBED
 	/* Get a pointer to the FDT */
-	gd->fdt_blob = _binary_dt_dtb_start;
+	gd->fdt_blob = __dtb_dt_begin;
 #elif defined CONFIG_OF_SEPARATE
 	/* FDT is at end of image */
-# ifdef CONFIG_SYS_SYM_OFFSETS
-	gd->fdt_blob = (void *)(_end_ofs + CONFIG_SYS_TEXT_BASE);
-# else
 	gd->fdt_blob = (ulong *)&_end;
-# endif
 #elif defined(CONFIG_OF_HOSTFILE)
 	if (read_fdt_from_file()) {
 		puts("Failed to read control FDT\n");
@@ -460,7 +451,7 @@ static int reserve_round_4k(void)
 static int reserve_mmu(void)
 {
 	/* reserve TLB table */
-	gd->arch.tlb_size = 4096 * 4;
+	gd->arch.tlb_size = PGTABLE_SIZE;
 	gd->relocaddr -= gd->arch.tlb_size;
 
 	/* round down to next 64 kB limit */
@@ -612,7 +603,7 @@ static int reserve_stacks(void)
 	 * TODO(sjg@chromium.org): Perhaps create arch_reserve_stack()
 	 * to handle this and put in arch/xxx/lib/stack.c
 	 */
-# ifdef CONFIG_ARM
+# if defined(CONFIG_ARM) && !defined(CONFIG_ARM64)
 #  ifdef CONFIG_USE_IRQ
 	gd->start_addr_sp -= (CONFIG_STACKSIZE_IRQ + CONFIG_STACKSIZE_FIQ);
 	debug("Reserving %zu Bytes for IRQ stack at: %08lx\n",
@@ -658,7 +649,7 @@ static int setup_board_part1(void)
 	bd->bi_sramsize = CONFIG_SYS_SRAM_SIZE;		/* size  of SRAM */
 #endif
 
-#if defined(CONFIG_8xx) || defined(CONFIG_8260) || defined(CONFIG_5xx) || \
+#if defined(CONFIG_8xx) || defined(CONFIG_MPC8260) || defined(CONFIG_5xx) || \
 		defined(CONFIG_E500) || defined(CONFIG_MPC86xx)
 	bd->bi_immr_base = CONFIG_SYS_IMMR;	/* base  of IMMR register     */
 #endif
@@ -730,14 +721,6 @@ static int init_post(void)
 }
 #endif
 
-static int setup_baud_rate(void)
-{
-	/* Ick, can we get rid of this line? */
-	gd->bd->bi_baudrate = gd->baudrate;
-
-	return 0;
-}
-
 static int setup_dram_config(void)
 {
 	/* Ram is board specific, so move it to board code ... */
@@ -770,7 +753,7 @@ static int setup_reloc(void)
 }
 
 /* ARM calls relocate_code from its crt0.S */
-#if !defined(CONFIG_ARM)
+#if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX)
 
 static int jump_to_copy(void)
 {
@@ -790,8 +773,6 @@ static int jump_to_copy(void)
 	 * (CPU cache)
 	 */
 	board_init_f_r_trampoline(gd->start_addr_sp);
-#elif defined(CONFIG_SANDBOX)
-	board_init_r(gd->new_gd, 0);
 #else
 	relocate_code(gd->start_addr_sp, gd->new_gd, gd->relocaddr);
 #endif
@@ -809,11 +790,6 @@ static int mark_bootstage(void)
 }
 
 static init_fnc_t init_sequence_f[] = {
-#if !defined(CONFIG_CPM2) && !defined(CONFIG_MPC512X) && \
-		!defined(CONFIG_MPC83xx) && !defined(CONFIG_MPC85xx) && \
-		!defined(CONFIG_MPC86xx) && !defined(CONFIG_X86)
-	zero_global_data,
-#endif
 #ifdef CONFIG_SANDBOX
 	setup_ram_buf,
 #endif
@@ -848,7 +824,7 @@ static init_fnc_t init_sequence_f[] = {
 	/* TODO: can we rename this to timer_init()? */
 	init_timebase,
 #endif
-#ifdef CONFIG_ARM
+#if defined(CONFIG_ARM) || defined(CONFIG_MIPS)
 	timer_init,		/* initialize timer */
 #endif
 #ifdef CONFIG_SYS_ALLOC_DPRAM
@@ -881,19 +857,17 @@ static init_fnc_t init_sequence_f[] = {
 #endif
 	display_options,	/* say that we are here */
 	display_text_info,	/* show debugging info if required */
-#if defined(CONFIG_8260)
+#if defined(CONFIG_MPC8260)
 	prt_8260_rsr,
 	prt_8260_clks,
-#endif /* CONFIG_8260 */
+#endif /* CONFIG_MPC8260 */
 #if defined(CONFIG_MPC83xx)
 	prt_83xx_rsr,
 #endif
 #ifdef CONFIG_PPC
 	checkcpu,
 #endif
-#if defined(CONFIG_DISPLAY_CPUINFO)
 	print_cpuinfo,		/* display cpu info (and speed) */
-#endif
 #if defined(CONFIG_MPC5xxx)
 	prt_mpc5xxx_clks,
 #endif /* CONFIG_MPC5xxx */
@@ -920,7 +894,7 @@ static init_fnc_t init_sequence_f[] = {
 #ifdef CONFIG_ARM
 	dram_init,		/* configure available RAM banks */
 #endif
-#ifdef CONFIG_PPC
+#if defined(CONFIG_MIPS) || defined(CONFIG_PPC)
 	init_func_ram,
 #endif
 #ifdef CONFIG_POST
@@ -985,7 +959,6 @@ static init_fnc_t init_sequence_f[] = {
 	INIT_FUNC_WATCHDOG_RESET
 	setup_board_part2,
 #endif
-	setup_baud_rate,
 	display_new_sp,
 #ifdef CONFIG_SYS_EXTBDINFO
 	setup_board_extra,
@@ -993,7 +966,7 @@ static init_fnc_t init_sequence_f[] = {
 	INIT_FUNC_WATCHDOG_RESET
 	reloc_fdt,
 	setup_reloc,
-#ifndef CONFIG_ARM
+#if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX)
 	jump_to_copy,
 #endif
 	NULL,
@@ -1001,18 +974,32 @@ static init_fnc_t init_sequence_f[] = {
 
 void board_init_f(ulong boot_flags)
 {
-#ifndef CONFIG_X86
+#ifdef CONFIG_SYS_GENERIC_GLOBAL_DATA
+	/*
+	 * For some archtectures, global data is initialized and used before
+	 * calling this function. The data should be preserved. For others,
+	 * CONFIG_SYS_GENERIC_GLOBAL_DATA should be defined and use the stack
+	 * here to host global data until relocation.
+	 */
 	gd_t data;
 
 	gd = &data;
+
+	/*
+	 * Clear global data before it is accessed at debug print
+	 * in initcall_run_list. Otherwise the debug print probably
+	 * get the wrong vaule of gd->have_console.
+	 */
+	zero_global_data();
 #endif
 
 	gd->flags = boot_flags;
+	gd->have_console = 0;
 
 	if (initcall_run_list(init_sequence_f))
 		hang();
 
-#ifndef CONFIG_ARM
+#if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX)
 	/* NOTREACHED - jump_to_copy() does not return */
 	hang();
 #endif

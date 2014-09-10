@@ -16,7 +16,6 @@
  * High Level Configuration Options
  */
 #define CONFIG_E300	1
-#define CONFIG_MPC83xx	1
 #define CONFIG_MPC837x	1
 #define CONFIG_MPC8377	1
 
@@ -122,9 +121,8 @@
 #define CONFIG_SYS_INIT_RAM_LOCK	1
 #define CONFIG_SYS_INIT_RAM_ADDR	0xE6000000 /* Initial RAM address */
 #define CONFIG_SYS_INIT_RAM_SIZE	0x1000 /* End of used area in RAM */
-#define CONFIG_SYS_GBL_DATA_SIZE	0x100 /* num bytes initial data */
 #define CONFIG_SYS_GBL_DATA_OFFSET	(CONFIG_SYS_INIT_RAM_SIZE -\
-					 CONFIG_SYS_GBL_DATA_SIZE)
+					 GENERATED_GBL_DATA_SIZE)
 
 /*
  * Local Bus Configuration & Clock Setup
@@ -314,6 +312,7 @@
 #define CONFIG_BOOTP_NTPSERVER
 #define CONFIG_BOOTP_RANDOM_DELAY
 #define CONFIG_BOOTP_SEND_HOSTNAME
+#define CONFIG_LIB_RAND
 
 /*
  * Command line configuration.
@@ -361,13 +360,11 @@
 #define CONFIG_SYS_LONGHELP
 #define CONFIG_SYS_LOAD_ADDR	0x2000000
 #define CONFIG_LOADADDR		0x4000000
-#define CONFIG_SYS_PROMPT	"=> "
 #define CONFIG_SYS_CBSIZE	256
 
 #define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16)
 #define CONFIG_SYS_MAXARGS	16
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE
-#define CONFIG_SYS_HZ		1000
 
 #define CONFIG_LOADS_ECHO		1
 #define CONFIG_SYS_LOADS_BAUD_CHANGE	1

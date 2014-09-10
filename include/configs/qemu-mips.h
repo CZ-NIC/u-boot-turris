@@ -12,7 +12,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_MIPS32			/* MIPS32 CPU core */
 #define CONFIG_QEMU_MIPS
 #define CONFIG_MISC_INIT_R
 
@@ -105,8 +104,6 @@
 #define CONFIG_SYS_MHZ			132
 
 #define CONFIG_SYS_MIPS_TIMER_FREQ	(CONFIG_SYS_MHZ * 1000000)
-
-#define CONFIG_SYS_HZ			1000
 
 /* Cached addr */
 #define CONFIG_SYS_SDRAM_BASE		0x80000000

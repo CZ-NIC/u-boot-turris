@@ -21,7 +21,7 @@
 #include "siemens-am33x-common.h"
 
 #define CONFIG_SYS_MPUCLK	720
-#define DXR2_IOCTRL_VAL		0x18b
+#define DDR_IOCTRL_VAL		0x18b
 #define DDR_PLL_FREQ		266
 
 #define BOARD_DFU_BUTTON_GPIO	59
@@ -44,7 +44,6 @@
 #undef CONFIG_SPL_NET_VCI_STRING
 #undef CONFIG_SPL_ETH_SUPPORT
 
-#define CONFIG_PHY_ADDR			0
 #define CONFIG_PHY_ATHEROS
 
 #define CONFIG_FACTORYSET
@@ -70,6 +69,7 @@
 	"hostname=pxm2\0" \
 	"nand_img_size=0x500000\0" \
 	"optargs=\0" \
+	"splashpos=m,m\0"	\
 	CONFIG_COMMON_ENV_SETTINGS \
 	"mmc_dev=0\0" \
 	"mmc_root=/dev/mmcblk0p2 rw\0" \
@@ -118,9 +118,7 @@
 		"fi;" \
 	"fi;" \
 	"run nand_boot;" \
-	"if ping ${serverip}; then " \
-		"run net_nfs; " \
-	"fi; "
+	"reset;"
 
 #else
 #define CONFIG_BOOTDELAY		0
@@ -148,6 +146,8 @@
 #define DA8XX_LCD_CNTL_BASE	LCD_CNTL_BASE
 #define PWM_TICKS	0x1388
 #define PWM_DUTY	0x200
+#define CONFIG_SYS_CONSOLE_BG_COL	0xff
+#define CONFIG_SYS_CONSOLE_FG_COL	0x00
 #endif
 
 #endif	/* ! __CONFIG_PXM2_H */

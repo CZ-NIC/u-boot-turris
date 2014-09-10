@@ -277,10 +277,10 @@ static init_fnc_t *init_sequence[] = {
 	serial_init,
 	console_init_f,
 	display_options,
-#if defined(CONFIG_8260)
+#if defined(CONFIG_MPC8260)
 	prt_8260_rsr,
 	prt_8260_clks,
-#endif /* CONFIG_8260 */
+#endif /* CONFIG_MPC8260 */
 #if defined(CONFIG_MPC83xx)
 	prt_83xx_rsr,
 #endif
@@ -312,17 +312,6 @@ static init_fnc_t *init_sequence[] = {
 	NULL,	/* Terminate this list */
 };
 
-ulong get_effective_memsize(void)
-{
-#ifndef	CONFIG_VERY_BIG_RAM
-	return gd->ram_size;
-#else
-	/* limit stack to what we can reasonable map */
-	return ((gd->ram_size > CONFIG_MAX_MEM_MAPPED) ?
-		CONFIG_MAX_MEM_MAPPED : gd->ram_size);
-#endif
-}
-
 static int __fixup_cpu(void)
 {
 	return 0;
@@ -343,13 +332,6 @@ int fixup_cpu(void) __attribute__((weak, alias("__fixup_cpu")));
  * initialized, and stack space is limited to a few kB.
  */
 
-#ifdef CONFIG_LOGBUFFER
-unsigned long logbuffer_base(void)
-{
-	return CONFIG_SYS_SDRAM_BASE + get_effective_memsize() - LOGBUFF_LEN;
-}
-#endif
-
 void board_init_f(ulong bootflag)
 {
 	bd_t *bd;
@@ -360,6 +342,13 @@ void board_init_f(ulong bootflag)
 
 #ifdef CONFIG_PRAM
 	ulong reg;
+#endif
+#ifdef CONFIG_DEEP_SLEEP
+	const ccsr_gur_t *gur = (void __iomem *)(CONFIG_SYS_MPC85xx_GUTS_ADDR);
+	struct ccsr_scfg *scfg = (void *)CONFIG_SYS_MPC85xx_SCFG;
+	u32 start_addr;
+	typedef void (*func_t)(void);
+	func_t kernel_resume;
 #endif
 
 	/* Pointer is writable since we allocated a register for it */
@@ -377,6 +366,15 @@ void board_init_f(ulong bootflag)
 	for (init_fnc_ptr = init_sequence; *init_fnc_ptr; ++init_fnc_ptr)
 		if ((*init_fnc_ptr) () != 0)
 			hang();
+
+#ifdef CONFIG_DEEP_SLEEP
+	/* Jump to kernel in deep sleep case */
+	if (in_be32(&gur->scrtsr[0]) & (1 << 3)) {
+		start_addr = in_be32(&scfg->sparecr[1]);
+		kernel_resume = (func_t)start_addr;
+		kernel_resume();
+	}
+#endif
 
 #ifdef CONFIG_POST
 	post_bootmode_init();
@@ -522,7 +520,7 @@ void board_init_f(ulong bootflag)
 	bd->bi_sramsize = CONFIG_SYS_SRAM_SIZE;		/* size  of SRAM */
 #endif
 
-#if defined(CONFIG_8xx) || defined(CONFIG_8260) || defined(CONFIG_5xx) || \
+#if defined(CONFIG_8xx) || defined(CONFIG_MPC8260) || defined(CONFIG_5xx) || \
     defined(CONFIG_E500) || defined(CONFIG_MPC86xx)
 	bd->bi_immr_base = CONFIG_SYS_IMMR;	/* base  of IMMR register     */
 #endif
@@ -549,7 +547,6 @@ void board_init_f(ulong bootflag)
 	bd->bi_ipbfreq = gd->arch.ipb_clk;
 	bd->bi_pcifreq = gd->pci_clk;
 #endif /* CONFIG_MPC5xxx */
-	bd->bi_baudrate = gd->baudrate;	/* Console Baudrate     */
 
 #ifdef CONFIG_SYS_EXTBDINFO
 	strncpy((char *) bd->bi_s_version, "1.2", sizeof(bd->bi_s_version));
@@ -984,7 +981,7 @@ void board_init_r(gd_t *id, ulong dest_addr)
 		pram += (LOGBUFF_LEN + LOGBUFF_OVERHEAD) / 1024;
 #endif
 #endif
-		sprintf(memsz, "%ldk", (bd->bi_memsize / 1024) - pram);
+		sprintf(memsz, "%ldk", (ulong) (bd->bi_memsize / 1024) - pram);
 		setenv("mem", memsz);
 	}
 #endif
@@ -992,14 +989,6 @@ void board_init_r(gd_t *id, ulong dest_addr)
 #ifdef CONFIG_PS2KBD
 	puts("PS/2:  ");
 	kbd_init();
-#endif
-
-#ifdef CONFIG_MODEM_SUPPORT
-	{
-		extern int do_mdm_init;
-
-		do_mdm_init = gd->do_mdm_init;
-	}
 #endif
 
 	/* Initialization complete - start the monitor */

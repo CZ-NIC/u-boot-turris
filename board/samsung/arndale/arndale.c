@@ -5,11 +5,29 @@
  */
 
 #include <common.h>
+#include <usb.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/dwmmc.h>
+#include <asm/arch/gpio.h>
 #include <asm/arch/power.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#ifdef CONFIG_USB_EHCI_EXYNOS
+int board_usb_init(int index, enum usb_init_type init)
+{
+	/* Configure gpios for usb 3503 hub:
+	 * disconnect, toggle reset and connect
+	 */
+	gpio_direction_output(EXYNOS5_GPIO_D17, 0);
+	gpio_direction_output(EXYNOS5_GPIO_X35, 0);
+
+	gpio_direction_output(EXYNOS5_GPIO_X35, 1);
+	gpio_direction_output(EXYNOS5_GPIO_D17, 1);
+
+	return 0;
+}
+#endif
 
 int board_init(void)
 {

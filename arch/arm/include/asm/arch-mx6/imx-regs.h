@@ -53,6 +53,7 @@
 #define GLOBAL_TIMER_BASE_ADDR          0x00A00200
 #define PRIVATE_TIMERS_WD_BASE_ADDR     0x00A00600
 #define IC_DISTRIBUTOR_BASE_ADDR        0x00A01000
+#define L2_PL310_BASE			0x00A02000
 #define GPV0_BASE_ADDR                  0x00B00000
 #define GPV1_BASE_ADDR                  0x00C00000
 #define PCIE_ARB_BASE_ADDR              0x01000000
@@ -216,6 +217,8 @@
 #define IP2APB_USBPHY2_BASE_ADDR    (AIPS2_OFF_BASE_ADDR + 0x7C000)
 
 #define CHIP_REV_1_0                 0x10
+#define CHIP_REV_1_2                 0x12
+#define CHIP_REV_1_5                 0x15
 #define IRAM_SIZE                    0x00040000
 #define FEC_QUIRK_ENET_MAC
 
@@ -244,6 +247,10 @@ struct src {
 	u32     gpr9;
 	u32     gpr10;
 };
+
+/* GPR1 bitfields */
+#define IOMUXC_GPR1_ENET_CLK_SEL_OFFSET		21
+#define IOMUXC_GPR1_ENET_CLK_SEL_MASK		(1 << IOMUXC_GPR1_ENET_CLK_SEL_OFFSET)
 
 /* GPR3 bitfields */
 #define IOMUXC_GPR3_GPU_DBG_OFFSET		29
@@ -401,10 +408,11 @@ struct cspi_regs {
 #define MXC_CSPICTRL_CHAN	18
 
 /* Bit position inside CON register to be associated with SS */
-#define MXC_CSPICON_POL		4
-#define MXC_CSPICON_PHA		0
-#define MXC_CSPICON_SSPOL	12
-#ifdef CONFIG_MX6SL
+#define MXC_CSPICON_PHA		0  /* SCLK phase control */
+#define MXC_CSPICON_POL		4  /* SCLK polarity */
+#define MXC_CSPICON_SSPOL	12 /* SS polarity */
+#define MXC_CSPICON_CTL		20 /* inactive state of SCLK */
+#if defined(CONFIG_MX6SL) || defined(CONFIG_MX6DL)
 #define MXC_SPI_BASE_ADDRESSES \
 	ECSPI1_BASE_ADDR, \
 	ECSPI2_BASE_ADDR, \

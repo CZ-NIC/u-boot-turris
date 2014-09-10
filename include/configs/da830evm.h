@@ -28,7 +28,6 @@
 #define CONFIG_SYS_OSCIN_FREQ		24000000
 #define CONFIG_SYS_TIMERBASE		DAVINCI_TIMER0_BASE
 #define CONFIG_SYS_HZ_CLOCK		clk_get(DAVINCI_AUXCLK_CLKID)
-#define CONFIG_SYS_HZ			1000
 #define CONFIG_SKIP_LOWLEVEL_INIT
 #define CONFIG_SYS_TEXT_BASE		0xc1080000
 
@@ -56,10 +55,10 @@
 /*
  * I2C Configuration
  */
-#define CONFIG_HARD_I2C
-#define CONFIG_DRIVER_DAVINCI_I2C
-#define CONFIG_SYS_I2C_SPEED		25000 /* 100Kbps won't work, H/W bug */
-#define CONFIG_SYS_I2C_SLAVE		10 /* Bogus, master-only in U-Boot */
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_I2C_DAVINCI
+#define CONFIG_SYS_DAVINCI_I2C_SPEED     25000 /* 100Kbps won't work, H/W bug */
+#define CONFIG_SYS_DAVINCI_I2C_SLAVE     10 /* Bogus, master-only in U-Boot */
 
 /*
  * I2C EEPROM definitions for catalyst 24W256 EEPROM chip

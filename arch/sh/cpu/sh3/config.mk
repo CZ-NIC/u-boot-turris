@@ -11,5 +11,4 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 #
-PLATFORM_CPPFLAGS += -m3
-PLATFORM_RELFLAGS += -ffixed-r13
+PLATFORM_CPPFLAGS += -DCONFIG_SH3 -m3

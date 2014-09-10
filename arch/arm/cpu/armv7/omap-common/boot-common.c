@@ -14,6 +14,7 @@
 #include <asm/arch/omap.h>
 #include <asm/arch/mmc_host_def.h>
 #include <asm/arch/sys_proto.h>
+#include <watchdog.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -55,6 +56,17 @@ void save_omap_boot_params(void)
 					*((u32 *)(dev_data + BOOT_MODE_OFFSET));
 		}
 	}
+
+#ifdef CONFIG_DRA7XX
+	/*
+	 * We get different values for QSPI_1 and QSPI_4 being used, but
+	 * don't actually care about this difference.  Rather than
+	 * mangle the later code, if we're coming in as QSPI_4 just
+	 * change to the QSPI_1 value.
+	 */
+	if (gd->arch.omap_boot_params.omap_bootdevice == 11)
+		gd->arch.omap_boot_params.omap_bootdevice = BOOT_DEVICE_SPI;
+#endif
 }
 
 #ifdef CONFIG_SPL_BUILD
@@ -65,7 +77,18 @@ u32 spl_boot_device(void)
 
 u32 spl_boot_mode(void)
 {
-	return gd->arch.omap_boot_params.omap_bootmode;
+	u32 val = gd->arch.omap_boot_params.omap_bootmode;
+
+	if (val == MMCSD_MODE_RAW)
+		return MMCSD_MODE_RAW;
+	else if (val == MMCSD_MODE_FAT)
+		return MMCSD_MODE_FAT;
+	else
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+		return MMCSD_MODE_EMMCBOOT;
+#else
+		return MMCSD_MODE_UNDEFINED;
+#endif
 }
 
 void spl_board_init(void)
@@ -75,6 +98,9 @@ void spl_board_init(void)
 #endif
 #if defined(CONFIG_AM33XX) && defined(CONFIG_SPL_MUSB_NEW_SUPPORT)
 	arch_misc_init();
+#endif
+#if defined(CONFIG_HW_WATCHDOG)
+	hw_watchdog_init();
 #endif
 #ifdef CONFIG_AM33XX
 	am33xx_spl_board_init();

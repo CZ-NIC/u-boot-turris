@@ -35,7 +35,7 @@ typedef struct bd_info {
 	unsigned long	bi_flashoffset; /* reserved area for startup monitor */
 	unsigned long	bi_sramstart;	/* start of SRAM memory */
 	unsigned long	bi_sramsize;	/* size	 of SRAM memory */
-#if defined(CONFIG_5xx) || defined(CONFIG_8xx) || defined(CONFIG_8260) \
+#if defined(CONFIG_5xx) || defined(CONFIG_8xx) || defined(CONFIG_MPC8260) \
 	|| defined(CONFIG_E500) || defined(CONFIG_MPC86xx)
 	unsigned long	bi_immr_base;	/* base of IMMR register */
 #endif
@@ -64,7 +64,6 @@ typedef struct bd_info {
 	unsigned long	bi_ipbfreq;	/* IPB Bus Freq, in MHz */
 	unsigned long	bi_pcifreq;	/* PCI Bus Freq, in MHz */
 #endif
-	unsigned int	bi_baudrate;	/* Console Baudrate */
 #if defined(CONFIG_405)   || \
     defined(CONFIG_405GP) || \
     defined(CONFIG_405EP) || \
@@ -105,9 +104,6 @@ typedef struct bd_info {
     defined(CONFIG_460EX) || defined(CONFIG_460GT)
 	unsigned int	bi_opbfreq;		/* OPB clock in Hz */
 	int		bi_iic_fast[2];		/* Use fast i2c mode */
-#endif
-#if defined(CONFIG_NX823)
-	unsigned char	bi_sernum[8];
 #endif
 #if defined(CONFIG_4xx)
 #if defined(CONFIG_440GX) || \

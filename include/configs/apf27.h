@@ -321,11 +321,12 @@
  */
 
 #ifdef CONFIG_CMD_I2C
-#define CONFIG_HARD_I2C
-#define CONFIG_I2C_MXC
-#define CONFIG_SYS_I2C_BASE		IMX_I2C1_BASE
-#define CONFIG_SYS_I2C_SPEED		100000	/* 100 kHz */
-#define CONFIG_SYS_I2C_SLAVE		0x7F
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_I2C_MXC
+#define CONFIG_SYS_MXC_I2C1_SPEED	100000	/* 100 kHz */
+#define CONFIG_SYS_MXC_I2C1_SLAVE	0x7F
+#define CONFIG_SYS_MXC_I2C2_SPEED	100000	/* 100 kHz */
+#define CONFIG_SYS_MXC_I2C2_SLAVE	0x7F
 #define CONFIG_SYS_I2C_NOPROBES		{ }
 
 #ifdef CONFIG_CMD_EEPROM
@@ -353,11 +354,6 @@
 #define CONFIG_RTC_DS1374
 #define CONFIG_SYS_RTC_BUS_NUM		0
 #endif /* CONFIG_CMD_DATE */
-
-/*
- * Clocks
- */
-#define	CONFIG_SYS_HZ			1000	/* Ticks per second */
 
 /*
  * PLL

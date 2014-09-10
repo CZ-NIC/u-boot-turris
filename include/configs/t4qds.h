@@ -10,6 +10,8 @@
 #ifndef __T4QDS_H
 #define __T4QDS_H
 
+#define CONFIG_SYS_GENERIC_BOARD
+#define CONFIG_DISPLAY_BOARDINFO
 #define CONFIG_CMD_REGINFO
 
 /* High Level Configuration Options */
@@ -17,11 +19,10 @@
 #define CONFIG_E500			/* BOOKE e500 family */
 #define CONFIG_E500MC			/* BOOKE e500mc family */
 #define CONFIG_SYS_BOOK3E_HV		/* Category E.HV supported */
-#define CONFIG_MPC85xx			/* MPC85xx/PQ3 platform */
 #define CONFIG_MP			/* support multiple processors */
 
 #ifndef CONFIG_SYS_TEXT_BASE
-#define CONFIG_SYS_TEXT_BASE	0xeff80000
+#define CONFIG_SYS_TEXT_BASE	0xeff40000
 #endif
 
 #ifndef CONFIG_RESET_VECTOR_ADDRESS
@@ -69,7 +70,16 @@
 /*
  *  Config the L3 Cache as L3 SRAM
  */
-#define CONFIG_SYS_INIT_L3_ADDR		CONFIG_RAMBOOT_TEXT_BASE
+#define CONFIG_SYS_INIT_L3_ADDR		0xFFFC0000
+#define CONFIG_SYS_L3_SIZE		(512 << 10)
+#define CONFIG_SPL_GD_ADDR		(CONFIG_SYS_INIT_L3_ADDR + 32 * 1024)
+#ifdef CONFIG_RAMBOOT_PBL
+#define CONFIG_ENV_ADDR			(CONFIG_SPL_GD_ADDR + 4 * 1024)
+#endif
+#define CONFIG_SPL_RELOC_MALLOC_ADDR	(CONFIG_SPL_GD_ADDR + 12 * 1024)
+#define CONFIG_SPL_RELOC_MALLOC_SIZE	(50 << 10)
+#define CONFIG_SPL_RELOC_STACK		(CONFIG_SPL_GD_ADDR + 64 * 1024)
+#define CONFIG_SPL_RELOC_STACK_SIZE	(22 << 10)
 
 #define CONFIG_SYS_DCSRBAR		0xf0000000
 #define CONFIG_SYS_DCSRBAR_PHYS		0xf00000000ull
@@ -87,7 +97,7 @@
 #define CONFIG_FSL_DDR_FIRST_SLOT_QUAD_CAPABLE
 
 #define CONFIG_DDR_SPD
-#define CONFIG_FSL_DDR3
+#define CONFIG_SYS_FSL_DDR3
 
 
 /*
@@ -97,7 +107,11 @@
 #define CONFIG_SYS_FLASH_BASE_PHYS	(0xf00000000ull | CONFIG_SYS_FLASH_BASE)
 
 
-#define CONFIG_SYS_MONITOR_BASE		CONFIG_SYS_TEXT_BASE
+#ifdef CONFIG_SPL_BUILD
+#define CONFIG_SYS_MONITOR_BASE	CONFIG_SPL_TEXT_BASE
+#else
+#define CONFIG_SYS_MONITOR_BASE	CONFIG_SYS_TEXT_BASE	/* start of monitor */
+#endif
 
 #define CONFIG_BOARD_EARLY_INIT_R	/* call board_early_init_r function */
 #define CONFIG_MISC_INIT_R
@@ -120,7 +134,7 @@
 					GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_OFFSET	CONFIG_SYS_GBL_DATA_OFFSET
 
-#define CONFIG_SYS_MONITOR_LEN		(512 * 1024)
+#define CONFIG_SYS_MONITOR_LEN		(768 * 1024)
 #define CONFIG_SYS_MALLOC_LEN		(4 * 1024 * 1024)
 
 /* Serial Port - controlled on board with jumper J8
@@ -284,7 +298,6 @@
 #define CONFIG_CMDLINE_EDITING			/* Command-line editing */
 #define CONFIG_AUTO_COMPLETE			/* add autocompletion support */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 #ifdef CONFIG_CMD_KGDB
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
 #else
@@ -293,7 +306,6 @@
 #define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16)
 #define CONFIG_SYS_MAXARGS	16		/* max number of command args */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE/* Boot Argument Buffer Size */
-#define CONFIG_SYS_HZ		1000		/* decrementer freq: 1ms ticks*/
 
 /*
  * For booting Linux, the board info and command line data
@@ -305,7 +317,6 @@
 
 #ifdef CONFIG_CMD_KGDB
 #define CONFIG_KGDB_BAUDRATE	230400	/* speed to run kgdb serial port */
-#define CONFIG_KGDB_SER_INDEX	2	/* which serial port to use */
 #endif
 
 /*

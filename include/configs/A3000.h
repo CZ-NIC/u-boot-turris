@@ -25,7 +25,6 @@
  * (easy to change)
  */
 
-#define CONFIG_MPC824X		1
 #define CONFIG_MPC8245		1
 #define CONFIG_A3000		1
 
@@ -168,7 +167,6 @@
  */
 
 #define CONFIG_SYS_CLK_FREQ  33333333	/* external frequency to pll */
-#define CONFIG_SYS_HZ		     1000
 
 	/* Bit-field values for MCCR1.
 	 */

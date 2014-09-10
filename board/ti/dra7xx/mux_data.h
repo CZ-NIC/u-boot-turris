@@ -31,10 +31,15 @@ const struct pad_conf_entry core_padconf_array_essential[] = {
 	{GPMC_A26, (IEN | PTU | PDIS | M1)},	/* mmc2_dat2 */
 	{GPMC_A27, (IEN | PTU | PDIS | M1)},	/* mmc2_dat3 */
 	{GPMC_CS1, (IEN | PTU | PDIS | M1)},	/* mmm2_cmd */
+#if (CONFIG_CONS_INDEX == 1)
 	{UART1_RXD, (FSC | IEN | PTU | PDIS | M0)}, /* UART1_RXD */
 	{UART1_TXD, (FSC | IEN | PTU | PDIS | M0)}, /* UART1_TXD */
 	{UART1_CTSN, (IEN | PTU | PDIS | M3)},	/* UART1_CTSN */
 	{UART1_RTSN, (IEN | PTU | PDIS | M3)},	/* UART1_RTSN */
+#elif (CONFIG_CONS_INDEX == 3)
+	{UART3_RXD, (FSC | IEN | PTU | PDIS | M0)}, /* UART3_RXD */
+	{UART3_TXD, (FSC | IEN | PTU | PDIS | M0)}, /* UART3_TXD */
+#endif
 	{I2C1_SDA, (IEN | PTU | PDIS | M0)},	/* I2C1_SDA */
 	{I2C1_SCL, (IEN | PTU | PDIS | M0)},	/* I2C1_SCL */
 	{MDIO_MCLK, (PTU | PEN | M0)},		/* MDIO_MCLK  */
@@ -61,5 +66,6 @@ const struct pad_conf_entry core_padconf_array_essential[] = {
 	{GPMC_A4, (IEN | PDIS | M1)},   /* QSPI1_CS3 */
 	{GPMC_CS2, (IEN | PTU | PDIS | M1)},    /* QSPI1_CS0 */
 	{GPMC_CS3, (IEN | PTU | PDIS | M1)},    /* QSPI1_CS1*/
+	{USB2_DRVVBUS, (M0 | IEN | FSC) },
 };
 #endif /* _MUX_DATA_DRA7XX_H_ */

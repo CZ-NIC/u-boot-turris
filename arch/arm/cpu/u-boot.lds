@@ -18,6 +18,7 @@ SECTIONS
 	.text :
 	{
 		*(.__image_copy_start)
+		*(.vectors)
 		CPUDIR/start.o (.text*)
 		*(.text*)
 	}
@@ -60,7 +61,12 @@ SECTIONS
 		*(.__rel_dyn_end)
 	}
 
-	_end = .;
+	.end :
+	{
+		*(.__end)
+	}
+
+	_image_binary_end = .;
 
 	/*
 	 * Deprecated: this MMU section is used by pxa at present but
@@ -91,12 +97,14 @@ SECTIONS
 		KEEP(*(.__bss_end));
 	}
 
-	/DISCARD/ : { *(.dynsym) }
-	/DISCARD/ : { *(.dynstr*) }
-	/DISCARD/ : { *(.dynamic*) }
-	/DISCARD/ : { *(.plt*) }
-	/DISCARD/ : { *(.interp*) }
-	/DISCARD/ : { *(.gnu*) }
-	/DISCARD/ : { *(.ARM.exidx*) }
-	/DISCARD/ : { *(.gnu.linkonce.armexidx.*) }
+	.dynsym _image_binary_end : { *(.dynsym) }
+	.dynbss : { *(.dynbss) }
+	.dynstr : { *(.dynstr*) }
+	.dynamic : { *(.dynamic*) }
+	.plt : { *(.plt*) }
+	.interp : { *(.interp*) }
+	.gnu.hash : { *(.gnu.hash) }
+	.gnu : { *(.gnu*) }
+	.ARM.exidx : { *(.ARM.exidx*) }
+	.gnu.linkonce.armexidx : { *(.gnu.linkonce.armexidx.*) }
 }

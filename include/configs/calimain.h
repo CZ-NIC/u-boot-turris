@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 OMICRON electronics GmbH
+ * Copyright (C) 2011-2014 OMICRON electronics GmbH
  *
  * Based on da850evm.h. Original Copyrights follow:
  *
@@ -18,6 +18,7 @@
 #define CONFIG_DRIVER_TI_EMAC
 #define MACH_TYPE_CALIMAIN	3528
 #define CONFIG_MACH_TYPE	MACH_TYPE_CALIMAIN
+#define CONFIG_SYS_GENERIC_BOARD
 
 /*
  * SoC Configuration
@@ -31,7 +32,6 @@
 #define CONFIG_SYS_OSCIN_FREQ		calimain_get_osc_freq()
 #define CONFIG_SYS_TIMERBASE		DAVINCI_TIMER0_BASE
 #define CONFIG_SYS_HZ_CLOCK		clk_get(DAVINCI_AUXCLK_CLKID)
-#define CONFIG_SYS_HZ			1000
 #define CONFIG_SYS_TEXT_BASE		0x60000000
 #define CONFIG_DA850_LOWLEVEL
 #define CONFIG_SYS_DA850_PLL_INIT

@@ -8,22 +8,11 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 
-include $(TOPDIR)/config.mk
+obj-y	:= mvsmr.o fpga.o
 
-LIB	= $(obj)lib$(BOARD).o
+extra-y := bootscript.img
 
-COBJS	:= $(BOARD).o fpga.o
+MKIMAGEFLAGS_bootscript.image := -T script -C none -n mvSMR_Script
 
-SRCS    := $(SOBJS:.o=.S) $(COBJS:.o=.c)
-OBJS    := $(addprefix $(obj),$(COBJS))
-SOBJS   := $(addprefix $(obj),$(SOBJS))
-
-$(LIB): $(obj).depend $(OBJS)
-		$(call cmd_link_o_target, $(OBJS))
-	@mkimage -T script -C none -n mvSMR_Script -d bootscript $(obj)bootscript.img
-
-#########################################################################
-
-include $(SRCTREE)/rules.mk
-
-sinclude $(obj).depend
+$(obj)/bootscript.img: $(src)/bootscript
+	$(call cmd,mkimage)

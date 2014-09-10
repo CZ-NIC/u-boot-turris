@@ -14,9 +14,6 @@
 #include <mpc8260.h>
 #include <version.h>
 
-#define CONFIG_8260 1		/* needed for Linux kernel header files */
-#define _LINUX_CONFIG_H 1	/* avoid reading Linux autoconf.h file	*/
-
 #include <ppc_asm.tmpl>
 #include <ppc_defs.h>
 
@@ -140,19 +137,6 @@ _hrcw_table:
 
 	.globl	_start
 _start:
-#if defined(CONFIG_MPC8260ADS) && defined(CONFIG_SYS_DEFAULT_IMMR)
-	lis	r3, CONFIG_SYS_DEFAULT_IMMR@h
-	nop
-	lwz	r4, 0(r3)
-	nop
-	rlwinm	r4, r4, 0, 8, 5
-	nop
-	oris	r4, r4, 0x0200
-	nop
-	stw	r4, 0(r3)
-	nop
-#endif /* CONFIG_MPC8260ADS && CONFIG_SYS_DEFAULT_IMMR */
-
 	mfmsr	r5			/* save msr contents		*/
 
 #if defined(CONFIG_COGENT)

@@ -18,6 +18,7 @@ SECTIONS
 	.text :
 	{
 		__image_copy_start = .;
+		*(.vectors)
 		CPUDIR/start.o (.text*)
 		*(.text*)
 	}
@@ -42,7 +43,12 @@ SECTIONS
 		__rel_dyn_end = .;
 	}
 
-	_end = .;
+	.end :
+	{
+		*(.__end)
+	}
+
+	_image_binary_end = .;
 
 	.bss __rel_dyn_start (OVERLAY) : {
 		__bss_start = .;
@@ -51,12 +57,15 @@ SECTIONS
 		__bss_end = .;
 	}
 
-	/DISCARD/ : { *(.dynsym) }
-	/DISCARD/ : { *(.dynstr*) }
-	/DISCARD/ : { *(.dynamic*) }
-	/DISCARD/ : { *(.plt*) }
-	/DISCARD/ : { *(.interp*) }
-	/DISCARD/ : { *(.gnu*) }
+	.dynsym _image_binary_end : { *(.dynsym) }
+	.dynbss : { *(.dynbss) }
+	.dynstr : { *(.dynstr*) }
+	.dynamic : { *(.dynamic*) }
+	.hash : { *(.hash*) }
+	.plt : { *(.plt*) }
+	.interp : { *(.interp*) }
+	.gnu : { *(.gnu*) }
+	.ARM.exidx : { *(.ARM.exidx*) }
 }
 
 #if defined(CONFIG_SPL_MAX_SIZE)

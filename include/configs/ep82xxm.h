@@ -9,7 +9,6 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define CONFIG_MPC8260
 #define CPU_ID_STR		"MPC8270"
 
 #define CONFIG_EP82XXM	/* Embedded Planet EP82xxM H 1.0 board */
@@ -164,8 +163,6 @@
 #define CONFIG_SYS_MEMTEST_END		0x00f00000	/* 1 ... 15 MB in DRAM	*/
 
 #define CONFIG_SYS_LOAD_ADDR		0x100000	/* default load address */
-
-#define CONFIG_SYS_HZ			1000	/* decrementer freq: 1 ms ticks */
 
 #define CONFIG_SYS_BAUDRATE_TABLE	{ 9600, 19200, 38400, 57600, 115200, 230400 }
 

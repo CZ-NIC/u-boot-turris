@@ -12,6 +12,7 @@
 /* High Level Configuration Options */
 #define CONFIG_SAMSUNG			1	/* in a SAMSUNG core */
 #define CONFIG_S5P			1	/* S5P Family */
+#define CONFIG_EXYNOS4				/* EXYNOS4 Family */
 #define CONFIG_EXYNOS4210		1	/* which is a EXYNOS4210 SoC */
 #define CONFIG_SMDKV310			1	/* working with SMDKV310*/
 
@@ -24,9 +25,6 @@
 
 /* Mach Type */
 #define CONFIG_MACH_TYPE		MACH_TYPE_SMDKV310
-
-/* Keep L2 Cache Disabled */
-#define CONFIG_L2_OFF			1
 
 #define CONFIG_SYS_SDRAM_BASE		0x40000000
 #define CONFIG_SYS_TEXT_BASE		0x43E00000
@@ -100,8 +98,6 @@
 #define CONFIG_SYS_MEMTEST_START	CONFIG_SYS_SDRAM_BASE
 #define CONFIG_SYS_MEMTEST_END		(CONFIG_SYS_SDRAM_BASE + 0x6000000)
 #define CONFIG_SYS_LOAD_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x3E00000)
-
-#define CONFIG_SYS_HZ			1000
 
 /* SMDKV310 has 4 bank of DRAM */
 #define CONFIG_NR_DRAM_BANKS	4

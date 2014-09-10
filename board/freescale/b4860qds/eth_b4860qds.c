@@ -66,6 +66,7 @@ static void initialize_lane_to_slot(void)
 			serdes2_prtcl);
 
 	switch (serdes2_prtcl) {
+	case 0x17:
 	case 0x18:
 		/*
 		 * Configuration:
@@ -150,6 +151,8 @@ int board_eth_init(bd_t *bis)
 	struct memac_mdio_info tg_memac_mdio_info;
 	unsigned int i;
 	unsigned int  serdes1_prtcl, serdes2_prtcl;
+	int qsgmii;
+	struct mii_dev *bus;
 	ccsr_gur_t *gur = (void *)(CONFIG_SYS_MPC85xx_GUTS_ADDR);
 	serdes1_prtcl = in_be32(&gur->rcwsr[4]) &
 		FSL_CORENET2_RCWSR4_SRDS1_PRTCL;
@@ -196,6 +199,7 @@ int board_eth_init(bd_t *bis)
 	fm_info_set_phy_address(FM1_DTSEC6, CONFIG_SYS_FM1_DTSEC6_PHY_ADDR);
 
 	switch (serdes1_prtcl) {
+	case 0x29:
 	case 0x2a:
 		/* Serdes 1: A-B SGMII, Configuring DTSEC 5 and 6 */
 		debug("Setting phy addresses for FM1_DTSEC5: %x and"
@@ -207,6 +211,7 @@ int board_eth_init(bd_t *bis)
 				CONFIG_SYS_FM1_DTSEC6_PHY_ADDR);
 		break;
 #ifdef CONFIG_PPC_B4420
+	case 0x17:
 	case 0x18:
 		/* Serdes 1: A-D SGMII, Configuring on board dual SGMII Phy */
 		debug("Setting phy addresses for FM1_DTSEC3: %x and"
@@ -226,6 +231,7 @@ int board_eth_init(bd_t *bis)
 		break;
 	}
 	switch (serdes2_prtcl) {
+	case 0x17:
 	case 0x18:
 		debug("Setting phy addresses on SGMII Riser card for"
 				"FM1_DTSEC ports: \n");
@@ -238,6 +244,7 @@ int board_eth_init(bd_t *bis)
 		fm_info_set_phy_address(FM1_DTSEC4,
 				CONFIG_SYS_FM1_DTSEC4_RISER_PHY_ADDR);
 		break;
+	case 0x48:
 	case 0x49:
 		debug("Setting phy addresses on SGMII Riser card for"
 				"FM1_DTSEC ports: \n");
@@ -279,6 +286,22 @@ int board_eth_init(bd_t *bis)
 		printf("Fman:  Unsupported SerDes2 Protocol 0x%02x\n",
 				serdes2_prtcl);
 		break;
+	}
+
+	/*set PHY address for QSGMII Riser Card on slot2*/
+	bus = miiphy_get_dev_by_name(DEFAULT_FM_MDIO_NAME);
+	qsgmii = is_qsgmii_riser_card(bus, PHY_BASE_ADDR, PORT_NUM, REGNUM);
+
+	if (qsgmii) {
+		switch (serdes2_prtcl) {
+		case 0xb2:
+		case 0x8d:
+			fm_info_set_phy_address(FM1_DTSEC3, PHY_BASE_ADDR);
+			fm_info_set_phy_address(FM1_DTSEC4, PHY_BASE_ADDR + 1);
+			break;
+		default:
+			break;
+		}
 	}
 
 	for (i = FM1_DTSEC1; i < FM1_DTSEC1 + CONFIG_SYS_NUM_FM1_DTSEC; i++) {

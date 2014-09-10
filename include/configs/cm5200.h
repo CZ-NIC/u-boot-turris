@@ -11,8 +11,7 @@
 /*
  * High Level Configuration Options
  */
-#define CONFIG_MPC5xxx		1	/* This is an MPC5xxx CPU */
-#define CONFIG_MPC5200		1	/* (more precisely an MPC5200 CPU) */
+#define CONFIG_MPC5200		1	/* This is an MPC5200 CPU */
 #define CONFIG_CM5200		1	/* ... on CM5200 platform */
 
 #define	CONFIG_SYS_TEXT_BASE	0xfc000000
@@ -283,7 +282,6 @@
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP		1	/* undef to save memory */
-#define CONFIG_SYS_PROMPT		"=> "	/* Monitor Command Prompt */
 #define CONFIG_SYS_CBSIZE		1024	/* Console I/O Buffer Size */
 #define CONFIG_SYS_PBSIZE (CONFIG_SYS_CBSIZE+sizeof(CONFIG_SYS_PROMPT)+16) /* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS		16	/* max number of command args */
@@ -296,7 +294,6 @@
 #define CONFIG_LOOPW		1
 
 #define CONFIG_SYS_LOAD_ADDR		0x100000	/* default load address */
-#define CONFIG_SYS_HZ			1000	/* decrementer freq: 1 ms ticks */
 
 /*
  * Various low-level settings

@@ -34,8 +34,9 @@ SECTIONS
 	.text :
 	{
 		*(.__image_copy_start)
+		*(.vectors)
 		CPUDIR/start.o (.text*)
-		board/ti/am335x/libam335x.o (.text*)
+		board/ti/am335x/built-in.o (.text*)
 		*(.text*)
 	}
 
@@ -77,7 +78,14 @@ SECTIONS
 		*(.__rel_dyn_end)
 	}
 
-	_end = .;
+	.hash : { *(.hash*) }
+
+	.end :
+	{
+		*(.__end)
+	}
+
+	_image_binary_end = .;
 
 	/*
 	 * Deprecated: this MMU section is used by pxa at present but
@@ -108,10 +116,13 @@ SECTIONS
 		KEEP(*(.__bss_end));
 	}
 
-	/DISCARD/ : { *(.dynsym) }
-	/DISCARD/ : { *(.dynstr*) }
-	/DISCARD/ : { *(.dynamic*) }
-	/DISCARD/ : { *(.plt*) }
-	/DISCARD/ : { *(.interp*) }
-	/DISCARD/ : { *(.gnu*) }
+	.dynsym _image_binary_end : { *(.dynsym) }
+	.dynbss : { *(.dynbss) }
+	.dynstr : { *(.dynstr*) }
+	.dynamic : { *(.dynamic*) }
+	.gnu.hash : { *(.gnu.hash) }
+	.plt : { *(.plt*) }
+	.interp : { *(.interp*) }
+	.gnu : { *(.gnu*) }
+	.ARM.exidx : { *(.ARM.exidx*) }
 }

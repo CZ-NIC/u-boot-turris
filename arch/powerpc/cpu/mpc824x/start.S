@@ -26,8 +26,6 @@
 #include <mpc824x.h>
 #include <version.h>
 
-#define _LINUX_CONFIG_H 1	/* avoid reading Linux autoconf.h file	*/
-
 #include <ppc_asm.tmpl>
 #include <ppc_defs.h>
 
@@ -58,9 +56,6 @@
 	GOT_ENTRY(__init_end)
 	GOT_ENTRY(__bss_end)
 	GOT_ENTRY(__bss_start)
-#if defined(CONFIG_FADS)
-	GOT_ENTRY(environment)
-#endif
 	END_GOT
 
 /*

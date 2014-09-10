@@ -89,7 +89,7 @@ struct eth_device {
 	int  (*recv) (struct eth_device *);
 	void (*halt) (struct eth_device *);
 #ifdef CONFIG_MCAST_TFTP
-	int (*mcast) (struct eth_device *, u32 ip, u8 set);
+	int (*mcast) (struct eth_device *, const u8 *enetaddr, u8 set);
 #endif
 	int  (*write_hwaddr) (struct eth_device *);
 	struct eth_device *next;
@@ -129,23 +129,6 @@ extern int eth_setenv_enetaddr(char *name, const uchar *enetaddr);
  */
 extern int eth_getenv_enetaddr_by_index(const char *base_name, int index,
 					uchar *enetaddr);
-
-#ifdef CONFIG_RANDOM_MACADDR
-/*
- * The u-boot policy does not allow hardcoded ethernet addresses. Under the
- * following circumstances a random generated address is allowed:
- *  - in emergency cases, where you need a working network connection to set
- *    the ethernet address.
- *    Eg. you want a rescue boot and don't have a serial port to access the
- *    CLI to set environment variables.
- *
- * In these cases, we generate a random locally administered ethernet address.
- *
- * Args:
- *  enetaddr - returns 6 byte hardware address
- */
-extern void eth_random_enetaddr(uchar *enetaddr);
-#endif
 
 extern int usb_eth_initialize(bd_t *bi);
 extern int eth_init(bd_t *bis);			/* Initialize the device */
@@ -672,6 +655,25 @@ static inline int is_valid_ether_addr(const u8 *addr)
 	/* FF:FF:FF:FF:FF:FF is a multicast address so we don't need to
 	 * explicitly check for it here. */
 	return !is_multicast_ether_addr(addr) && !is_zero_ether_addr(addr);
+}
+
+/**
+ * eth_random_addr - Generate software assigned random Ethernet address
+ * @addr: Pointer to a six-byte array containing the Ethernet address
+ *
+ * Generate a random Ethernet address (MAC) that is not multicast
+ * and has the local assigned bit set.
+ */
+static inline void eth_random_addr(uchar *addr)
+{
+	int i;
+	unsigned int seed = get_timer(0);
+
+	for (i = 0; i < 6; i++)
+		addr[i] = rand_r(&seed);
+
+	addr[0] &= 0xfe;	/* clear multicast bit */
+	addr[0] |= 0x02;	/* set local assignment bit (IEEE802) */
 }
 
 /* Convert an IP address to a string */

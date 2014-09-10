@@ -14,7 +14,7 @@
 #include <asm/gpio.h>
 #include <asm/imx-common/iomux-v3.h>
 #include <asm/io.h>
-#include <asm/sizes.h>
+#include <linux/sizes.h>
 #include <common.h>
 #include <fsl_esdhc.h>
 #include <mmc.h>
@@ -33,6 +33,9 @@ DECLARE_GLOBAL_DATA_PTR;
 #define ENET_PAD_CTRL  (PAD_CTL_PKE | PAD_CTL_PUE |             \
 	PAD_CTL_PUS_100K_UP | PAD_CTL_SPEED_MED   |             \
 	PAD_CTL_DSE_40ohm   | PAD_CTL_HYS)
+
+#define SPI_PAD_CTRL (PAD_CTL_HYS | PAD_CTL_SPEED_MED | \
+		      PAD_CTL_DSE_40ohm | PAD_CTL_SRE_FAST)
 
 #define ETH_PHY_RESET	IMX_GPIO_NR(4, 21)
 
@@ -71,6 +74,20 @@ static iomux_v3_cfg_t const fec_pads[] = {
 	MX6_PAD_FEC_TX_CLK__GPIO_4_21 | MUX_PAD_CTRL(NO_PAD_CTRL),
 };
 
+#ifdef CONFIG_MXC_SPI
+static iomux_v3_cfg_t ecspi1_pads[] = {
+	MX6_PAD_ECSPI1_MISO__ECSPI_MISO | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	MX6_PAD_ECSPI1_MOSI__ECSPI_MOSI | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	MX6_PAD_ECSPI1_SCLK__ECSPI_SCLK | MUX_PAD_CTRL(SPI_PAD_CTRL),
+	MX6_PAD_ECSPI1_SS0__GPIO4_IO11  | MUX_PAD_CTRL(NO_PAD_CTRL),
+};
+
+static void setup_spi(void)
+{
+	imx_iomux_v3_setup_multiple_pads(ecspi1_pads, ARRAY_SIZE(ecspi1_pads));
+}
+#endif
+
 static void setup_iomux_uart(void)
 {
 	imx_iomux_v3_setup_multiple_pads(uart1_pads, ARRAY_SIZE(uart1_pads));
@@ -106,17 +123,9 @@ int board_mmc_init(bd_t *bis)
 #ifdef CONFIG_FEC_MXC
 int board_eth_init(bd_t *bis)
 {
-	int ret;
-
 	setup_iomux_fec();
 
-	ret = cpu_eth_init(bis);
-	if (ret) {
-		printf("FEC MXC: %s:failed\n", __func__);
-		return ret;
-	}
-
-	return 0;
+	return cpu_eth_init(bis);
 }
 
 static int setup_fec(void)
@@ -128,7 +137,7 @@ static int setup_fec(void)
 	/* clear gpr1[14], gpr1[18:17] to select anatop clock */
 	clrsetbits_le32(&iomuxc_regs->gpr[1], IOMUX_GPR1_FEC_MASK, 0);
 
-	ret = enable_fec_anatop_clock();
+	ret = enable_fec_anatop_clock(ENET_50MHz);
 	if (ret)
 		return ret;
 
@@ -140,6 +149,9 @@ static int setup_fec(void)
 int board_early_init_f(void)
 {
 	setup_iomux_uart();
+#ifdef CONFIG_MXC_SPI
+	setup_spi();
+#endif
 	return 0;
 }
 

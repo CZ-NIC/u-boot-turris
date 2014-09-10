@@ -16,7 +16,6 @@
 /*
  * High Level Configuration Options
  */
-#define CONFIG_MPC5xxx		1	/* This is an MPC5xxx CPU */
 #define CONFIG_MPC5200
 
 #define CONFIG_SYS_MPC5XXX_CLKIN	33000000 /* running at 33.000000MHz */
@@ -276,10 +275,8 @@
 #define CONFIG_SYS_INIT_RAM_END		MPC5XXX_SRAM_SIZE
 #endif
 
-/* size in bytes reserved for initial data */
-#define CONFIG_SYS_GBL_DATA_SIZE	128
 #define CONFIG_SYS_GBL_DATA_OFFSET	(CONFIG_SYS_INIT_RAM_END - \
-					 CONFIG_SYS_GBL_DATA_SIZE)
+					 GENERATED_GBL_DATA_SIZE)
 #define CONFIG_SYS_INIT_SP_OFFSET	CONFIG_SYS_GBL_DATA_OFFSET
 
 #define CONFIG_SYS_MONITOR_BASE		CONFIG_SYS_TEXT_BASE
@@ -311,7 +308,6 @@
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory	    */
-#define CONFIG_SYS_PROMPT		"=> "	/* Monitor Command Prompt   */
 #define CONFIG_CMDLINE_EDITING
 #define CONFIG_SYS_HUSH_PARSER
 
@@ -332,7 +328,6 @@
 #define CONFIG_SYS_LOAD_ADDR		0x100000
 
 /* decrementer freq: 1 ms ticks */
-#define CONFIG_SYS_HZ			1000
 
 /*
  * Various low-level settings

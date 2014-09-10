@@ -88,6 +88,7 @@
 #define CONFIG_CMD_LOADS
 #define CONFIG_CMD_LOADB
 #define CONFIG_CMD_FPGA
+#define CONFIG_CMD_FPGA_LOADMK
 #define CONFIG_CMDLINE_EDITING
 
 #define CONFIG_SYS_HUSH_PARSER
@@ -110,10 +111,8 @@
 /*
  * Defines processor clock - important for correct timings concerning serial
  * interface etc.
- * CONFIG_SYS_HZ gives unit: 1000 -> 1 Hz ^= 1000 ms
  */
 
-#define CONFIG_SYS_HZ			1000
 #define CONFIG_SYS_CLK			80000000
 #define CONFIG_SYS_CPU_CLK		(CONFIG_SYS_CLK * 3)
 #define CONFIG_SYS_SDRAM_SIZE		32		/* SDRAM size in MB */

@@ -118,12 +118,10 @@
 /*
  * I2C
  */
-#define CONFIG_HARD_I2C
-#define CONFIG_DRIVER_OMAP34XX_I2C
-
-#define CONFIG_SYS_I2C_SPEED		100000
-#define CONFIG_SYS_I2C_SLAVE		1
-#define CONFIG_I2C_MULTI_BUS
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_OMAP24_I2C_SPEED	100000
+#define CONFIG_SYS_OMAP24_I2C_SLAVE	1
+#define CONFIG_SYS_I2C_OMAP34XX
 
 /*
  * TWL4030
@@ -143,6 +141,7 @@
 
 #define CONFIG_SYS_MAX_NAND_DEVICE	1		/* Max number of */
 							/* NAND devices */
+#define CONFIG_SYS_NAND_BUSWIDTH_16BIT	16
 #define CONFIG_JFFS2_NAND
 /* nand device jffs2 lives on */
 #define CONFIG_JFFS2_DEV		"nand0"
@@ -265,7 +264,6 @@
  */
 #define CONFIG_SYS_TIMERBASE		(OMAP34XX_GPT2)
 #define CONFIG_SYS_PTV			2	/* Divisor: 2^(PTV+1) => 8 */
-#define CONFIG_SYS_HZ			1000
 
 /*
  * Physical Memory Map
@@ -298,7 +296,6 @@
 
 #if defined(CONFIG_CMD_NAND)
 #define CONFIG_NAND_OMAP_GPMC
-#define GPMC_NAND_ECC_LP_x16_LAYOUT	1
 #define CONFIG_ENV_IS_IN_NAND
 #define CONFIG_ENV_OFFSET		SMNAND_ENV_OFFSET
 #endif

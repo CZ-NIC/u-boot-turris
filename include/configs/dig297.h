@@ -123,10 +123,10 @@
 #undef CONFIG_CMD_NFS		/* NFS support			*/
 
 #define CONFIG_SYS_NO_FLASH
-#define CONFIG_HARD_I2C
-#define CONFIG_SYS_I2C_SPEED		100000
-#define CONFIG_SYS_I2C_SLAVE		1
-#define CONFIG_DRIVER_OMAP34XX_I2C	1
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_OMAP24_I2C_SPEED	100000
+#define CONFIG_SYS_OMAP24_I2C_SLAVE	1
+#define CONFIG_SYS_I2C_OMAP34XX
 
 /*
  * TWL4030
@@ -138,13 +138,12 @@
  * Board NAND Info.
  */
 #define CONFIG_NAND_OMAP_GPMC
+#define CONFIG_SYS_NAND_BUSWIDTH_16BIT	16
 #define CONFIG_SYS_NAND_ADDR		NAND_BASE	/* physical address */
 							/* to access nand */
 #define CONFIG_SYS_NAND_BASE		NAND_BASE	/* physical address */
 							/* to access nand at */
 							/* CS0 */
-#define GPMC_NAND_ECC_LP_x16_LAYOUT
-
 #define CONFIG_SYS_MAX_NAND_DEVICE	1		/* Max number of NAND */
 
 #if defined(CONFIG_CMD_NET)
@@ -239,7 +238,6 @@
  */
 #define CONFIG_SYS_TIMERBASE		(OMAP34XX_GPT2)
 #define CONFIG_SYS_PTV			2       /* Divisor: 2^(PTV+1) => 8 */
-#define CONFIG_SYS_HZ			1000
 
 /*-----------------------------------------------------------------------
  * Physical Memory Map

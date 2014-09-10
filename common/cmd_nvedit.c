@@ -25,6 +25,7 @@
  */
 
 #include <common.h>
+#include <cli.h>
 #include <command.h>
 #include <environment.h>
 #include <search.h>
@@ -33,6 +34,7 @@
 #include <watchdog.h>
 #include <linux/stddef.h>
 #include <asm/byteorder.h>
+#include <asm/io.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -157,10 +159,8 @@ static int do_env_grep(cmd_tbl_t *cmdtp, int flag,
 	grep_how  = H_MATCH_SUBSTR;	/* default: substring search	*/
 	grep_what = H_MATCH_BOTH;	/* default: grep names and values */
 
-	while (argc > 1 && **(argv + 1) == '-') {
-		char *arg = *++argv;
-
-		--argc;
+	while (--argc > 0 && **++argv == '-') {
+		char *arg = *argv;
 		while (*++arg) {
 			switch (*arg) {
 #ifdef CONFIG_REGEX
@@ -409,7 +409,7 @@ int do_env_ask(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		return 1;
 
 	/* prompt for input */
-	len = readline(message);
+	len = cli_readline(message);
 
 	if (size < len)
 		console_buffer[size] = '\0';
@@ -592,7 +592,7 @@ static int do_env_edit(cmd_tbl_t *cmdtp, int flag, int argc,
 	else
 		buffer[0] = '\0';
 
-	if (readline_into_buffer("edit: ", buffer, 0) < 0)
+	if (cli_readline_into_buffer("edit: ", buffer, 0) < 0)
 		return 1;
 
 	return setenv(argv[1], buffer);
@@ -848,7 +848,8 @@ static int do_env_export(cmd_tbl_t *cmdtp, int flag,
 			 int argc, char * const argv[])
 {
 	char	buf[32];
-	char	*addr, *cmd, *res;
+	ulong	addr;
+	char	*ptr, *cmd, *res;
 	size_t	size = 0;
 	ssize_t	len;
 	env_t	*envp;
@@ -893,10 +894,11 @@ NXTARG:		;
 	if (argc < 1)
 		return CMD_RET_USAGE;
 
-	addr = (char *)simple_strtoul(argv[0], NULL, 16);
+	addr = simple_strtoul(argv[0], NULL, 16);
+	ptr = map_sysmem(addr, size);
 
 	if (size)
-		memset(addr, '\0', size);
+		memset(ptr, '\0', size);
 
 	argc--;
 	argv++;
@@ -904,7 +906,7 @@ NXTARG:		;
 	if (sep) {		/* export as text file */
 		len = hexport_r(&env_htab, sep,
 				H_MATCH_KEY | H_MATCH_IDENT,
-				&addr, size, argc, argv);
+				&ptr, size, argc, argv);
 		if (len < 0) {
 			error("Cannot export environment: errno = %d\n", errno);
 			return 1;
@@ -915,12 +917,12 @@ NXTARG:		;
 		return 0;
 	}
 
-	envp = (env_t *)addr;
+	envp = (env_t *)ptr;
 
 	if (chk)		/* export as checksum protected block */
 		res = (char *)envp->data;
 	else			/* export as raw binary data */
-		res = addr;
+		res = ptr;
 
 	len = hexport_r(&env_htab, '\0',
 			H_MATCH_KEY | H_MATCH_IDENT,
@@ -962,7 +964,8 @@ sep_err:
 static int do_env_import(cmd_tbl_t *cmdtp, int flag,
 			 int argc, char * const argv[])
 {
-	char	*cmd, *addr;
+	ulong	addr;
+	char	*cmd, *ptr;
 	char	sep = '\n';
 	int	chk = 0;
 	int	fmt = 0;
@@ -1006,12 +1009,16 @@ static int do_env_import(cmd_tbl_t *cmdtp, int flag,
 	if (!fmt)
 		printf("## Warning: defaulting to text format\n");
 
-	addr = (char *)simple_strtoul(argv[0], NULL, 16);
+	addr = simple_strtoul(argv[0], NULL, 16);
+	ptr = map_sysmem(addr, 0);
 
 	if (argc == 2) {
 		size = simple_strtoul(argv[1], NULL, 16);
+	} else if (argc == 1 && chk) {
+		puts("## Error: external checksum format must pass size\n");
+		return CMD_RET_FAILURE;
 	} else {
-		char *s = addr;
+		char *s = ptr;
 
 		size = 0;
 
@@ -1031,7 +1038,7 @@ static int do_env_import(cmd_tbl_t *cmdtp, int flag,
 
 	if (chk) {
 		uint32_t crc;
-		env_t *ep = (env_t *)addr;
+		env_t *ep = (env_t *)ptr;
 
 		size -= offsetof(env_t, data);
 		memcpy(&crc, &ep->crc, sizeof(crc));
@@ -1040,11 +1047,11 @@ static int do_env_import(cmd_tbl_t *cmdtp, int flag,
 			puts("## Error: bad CRC, import failed\n");
 			return 1;
 		}
-		addr = (char *)ep->data;
+		ptr = (char *)ep->data;
 	}
 
-	if (himport_r(&env_htab, addr, size, sep, del ? 0 : H_NOCLEAR,
-			0, NULL) == 0) {
+	if (himport_r(&env_htab, ptr, size, sep, del ? 0 : H_NOCLEAR, 0,
+		      NULL) == 0) {
 		error("Environment import failed: errno = %d\n", errno);
 		return 1;
 	}
@@ -1056,6 +1063,23 @@ sep_err:
 	printf("## %s: only one of \"-b\", \"-c\" or \"-t\" allowed\n",
 		cmd);
 	return 1;
+}
+#endif
+
+#if defined(CONFIG_CMD_ENV_EXISTS)
+static int do_env_exists(cmd_tbl_t *cmdtp, int flag, int argc,
+		       char * const argv[])
+{
+	ENTRY e, *ep;
+
+	if (argc < 2)
+		return CMD_RET_USAGE;
+
+	e.key = argv[1];
+	e.data = NULL;
+	hsearch_r(e, FIND, &ep, &env_htab, 0);
+
+	return (ep == NULL) ? 1 : 0;
 }
 #endif
 
@@ -1094,6 +1118,9 @@ static cmd_tbl_t cmd_env_sub[] = {
 	U_BOOT_CMD_MKENT(save, 1, 0, do_env_save, "", ""),
 #endif
 	U_BOOT_CMD_MKENT(set, CONFIG_SYS_MAXARGS, 0, do_env_set, "", ""),
+#if defined(CONFIG_CMD_ENV_EXISTS)
+	U_BOOT_CMD_MKENT(exists, 2, 0, do_env_exists, "", ""),
+#endif
 };
 
 #if defined(CONFIG_NEEDS_MANUAL_RELOC)
@@ -1135,6 +1162,9 @@ static char env_help_text[] =
 	"env delete [-f] var [...] - [forcibly] delete variable(s)\n"
 #if defined(CONFIG_CMD_EDITENV)
 	"env edit name - edit environment variable\n"
+#endif
+#if defined(CONFIG_CMD_ENV_EXISTS)
+	"env exists name - tests for existence of variable\n"
 #endif
 #if defined(CONFIG_CMD_EXPORTENV)
 	"env export [-t | -b | -c] [-s size] addr [var ...] - export environment\n"

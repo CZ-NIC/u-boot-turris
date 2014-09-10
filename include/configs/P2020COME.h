@@ -29,7 +29,6 @@
 /* High Level Configuration Options */
 #define CONFIG_BOOKE		1	/* BOOKE */
 #define CONFIG_E500		1	/* BOOKE e500 family */
-#define CONFIG_MPC85xx		1	/* MPC8540/60/55/41/48/P1020/P2020,etc*/
 #define CONFIG_P2020		1
 #define CONFIG_P2020COME	1
 #define CONFIG_FSL_ELBC		1	/* Enable eLBC Support */
@@ -105,7 +104,7 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_SYS_CCSRBAR_PHYS_LOW	CONFIG_SYS_CCSRBAR
 
 /* DDR Setup */
-#define CONFIG_FSL_DDR3
+#define CONFIG_SYS_FSL_DDR3
 #define CONFIG_SPD_EEPROM		/* Use SPD EEPROM for DDR setup */
 #define CONFIG_DDR_SPD
 
@@ -412,7 +411,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 #define CONFIG_CMDLINE_EDITING			/* Command-line editing */
 #define CONFIG_AUTO_COMPLETE	1		/* add autocompletion support */
 #define CONFIG_SYS_LOAD_ADDR	0x2000000	/* default load address */
-#define CONFIG_SYS_PROMPT	"=> "		/* Monitor Command Prompt */
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_SYS_CBSIZE	1024		/* Console I/O Buffer Size */
 #else
@@ -422,7 +420,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 						/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16		/* max number of command args */
 #define CONFIG_SYS_BARGSIZE	CONFIG_SYS_CBSIZE/* Boot Argument Buffer Size */
-#define CONFIG_SYS_HZ		1000		/* decrementer freq: 1ms tick */
 
 /*
  * For booting Linux, the board info and command line data
@@ -434,7 +431,6 @@ extern unsigned long get_board_sys_clk(unsigned long dummy);
 
 #if defined(CONFIG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE	230400	/* speed to run kgdb serial port */
-#define CONFIG_KGDB_SER_INDEX	2	/* which serial port to use */
 #endif
 
 /*

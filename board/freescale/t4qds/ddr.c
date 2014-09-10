@@ -10,8 +10,8 @@
 #include <i2c.h>
 #include <hwconfig.h>
 #include <asm/mmu.h>
-#include <asm/fsl_ddr_sdram.h>
-#include <asm/fsl_ddr_dimm_params.h>
+#include <fsl_ddr_sdram.h>
+#include <fsl_ddr_dimm_params.h>
 #include <asm/fsl_law.h>
 #include "ddr.h"
 
@@ -56,7 +56,7 @@ void fsl_ddr_board_options(memctl_options_t *popts,
 				popts->wrlvl_start = pbsp->wrlvl_start;
 				popts->wrlvl_ctl_2 = pbsp->wrlvl_ctl_2;
 				popts->wrlvl_ctl_3 = pbsp->wrlvl_ctl_3;
-				popts->twoT_en = pbsp->force_2T;
+				popts->twot_en = pbsp->force_2t;
 				goto found;
 			}
 			pbsp_highest = pbsp;
@@ -75,7 +75,7 @@ void fsl_ddr_board_options(memctl_options_t *popts,
 		popts->wrlvl_start = pbsp_highest->wrlvl_start;
 		popts->wrlvl_ctl_2 = pbsp->wrlvl_ctl_2;
 		popts->wrlvl_ctl_3 = pbsp->wrlvl_ctl_3;
-		popts->twoT_en = pbsp_highest->force_2T;
+		popts->twot_en = pbsp_highest->force_2t;
 	} else {
 		panic("DIMM is not supported by this board");
 	}
@@ -117,11 +117,15 @@ phys_size_t initdram(int board_type)
 
 	puts("Initializing....using SPD\n");
 
+#if defined(CONFIG_SPL_BUILD) || !defined(CONFIG_RAMBOOT_PBL)
 	dram_size = fsl_ddr_sdram();
 
 	dram_size = setup_ddr_tlbs(dram_size / 0x100000);
 	dram_size *= 0x100000;
 
-	puts("    DDR: ");
+#else
+	/* DDR has been initialised by first stage boot loader */
+	dram_size = fsl_ddr_sdram_size();
+#endif
 	return dram_size;
 }

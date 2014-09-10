@@ -4,28 +4,27 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 
-include $(TOPDIR)/config.mk
+MINIMAL=
 
-LIB	= $(obj)lib$(BOARD).o
+ifdef CONFIG_SPL_BUILD
+ifdef CONFIG_SPL_INIT_MINIMAL
+MINIMAL=y
+endif
+endif
 
-COBJS-y	+= $(BOARD).o
-COBJS-y	+= ddr.o
-COBJS-y	+= law.o
-COBJS-$(CONFIG_PCI)  += pci.o
-COBJS-y	+= tlb.o
+ifdef MINIMAL
 
-SRCS	:= $(SOBJS:.o=.S) $(COBJS-y:.o=.c)
-OBJS	:= $(addprefix $(obj),$(COBJS-y))
-SOBJS	:= $(addprefix $(obj),$(SOBJS))
+obj-y	+= spl_minimal.o tlb.o law.o
 
-$(LIB):	$(obj).depend $(OBJS) $(SOBJS)
-	$(call cmd_link_o_target, $(OBJS))
+else
+ifdef CONFIG_SPL_BUILD
+obj-y += spl.o
+else
+obj-y	+= p1_p2_rdb.o
+obj-$(CONFIG_PCI)  += pci.o
+endif
+obj-y	+= ddr.o
+obj-y	+= law.o
+obj-y	+= tlb.o
 
-#########################################################################
-
-# defines $(obj).depend target
-include $(SRCTREE)/rules.mk
-
-sinclude $(obj).depend
-
-#########################################################################
+endif

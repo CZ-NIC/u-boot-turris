@@ -59,6 +59,28 @@ void set_usbhost_phy_ctrl(unsigned int enable)
 		exynos5_set_usbhost_phy_ctrl(enable);
 }
 
+static void exynos5_set_usbdrd_phy_ctrl(unsigned int enable)
+{
+	struct exynos5_power *power =
+		(struct exynos5_power *)samsung_get_base_power();
+
+	if (enable) {
+		/* Enabling USBDRD_PHY */
+		setbits_le32(&power->usbdrd_phy_control,
+				POWER_USB_DRD_PHY_CTRL_EN);
+	} else {
+		/* Disabling USBDRD_PHY */
+		clrbits_le32(&power->usbdrd_phy_control,
+				POWER_USB_DRD_PHY_CTRL_EN);
+	}
+}
+
+void set_usbdrd_phy_ctrl(unsigned int enable)
+{
+	if (cpu_is_exynos5())
+		exynos5_set_usbdrd_phy_ctrl(enable);
+}
+
 static void exynos5_dp_phy_control(unsigned int enable)
 {
 	unsigned int cfg;
@@ -90,6 +112,12 @@ static void exynos5_set_ps_hold_ctrl(void)
 			EXYNOS_PS_HOLD_CONTROL_DATA_HIGH);
 }
 
+/*
+ * Set ps_hold data driving value high
+ * This enables the machine to stay powered on
+ * after the initial power-on condition goes away
+ * (e.g. power button).
+ */
 void set_ps_hold_ctrl(void)
 {
 	if (cpu_is_exynos5())

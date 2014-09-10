@@ -20,6 +20,7 @@
 /* Common define for many platforms. */
 #define CONFIG_OMAP
 #define CONFIG_OMAP_COMMON
+#define CONFIG_SYS_GENERIC_BOARD
 
 /*
  * We typically do not contain NOR flash.  In the cases where we do, we
@@ -36,8 +37,28 @@
 /*
  * Our DDR memory always starts at 0x80000000 and U-Boot shall have
  * relocated itself to higher in memory by the time this value is used.
+ * However, set this to a 32MB offset to allow for easier Linux kernel
+ * booting as the default is often used as the kernel load address.
  */
-#define CONFIG_SYS_LOAD_ADDR		0x80000000
+#define CONFIG_SYS_LOAD_ADDR		0x82000000
+
+/*
+ * We setup defaults based on constraints from the Linux kernel, which should
+ * also be safe elsewhere.  We have the default load at 32MB into DDR (for
+ * the kernel), FDT above 128MB (the maximum location for the end of the
+ * kernel), and the ramdisk 512KB above that (allowing for hopefully never
+ * seen large trees).  We say all of this must be within the first 256MB
+ * as that will normally be within the kernel lowmem and thus visible via
+ * bootm_size and we only run on platforms with 256MB or more of memory.
+ */
+#define DEFAULT_LINUX_BOOT_ENV \
+	"loadaddr=0x82000000\0" \
+	"kernel_addr_r=0x82000000\0" \
+	"fdtaddr=0x88000000\0" \
+	"fdt_addr_r=0x88000000\0" \
+	"rdaddr=0x88080000\0" \
+	"ramdisk_addr_r=0x88080000\0" \
+	"bootm_size=0x10000000\0"
 
 /*
  * Default to a quick boot delay.
@@ -45,27 +66,29 @@
 #define CONFIG_BOOTDELAY		1
 
 /*
- * DDR information.  We say (for simplicity) that we have 1 bank,
- * always, even when we have more.  We always start at 0x80000000,
- * and we place the initial stack pointer in our SRAM.
+ * DDR information.  If the CONFIG_NR_DRAM_BANKS is not defined,
+ * we say (for simplicity) that we have 1 bank, always, even when
+ * we have more.  We always start at 0x80000000, and we place the
+ * initial stack pointer in our SRAM. Otherwise, we can define
+ * CONFIG_NR_DRAM_BANKS before including this file.
  */
+#ifndef CONFIG_NR_DRAM_BANKS
 #define CONFIG_NR_DRAM_BANKS		1
+#endif
 #define CONFIG_SYS_SDRAM_BASE		0x80000000
 #define CONFIG_SYS_INIT_SP_ADDR         (NON_SECURE_SRAM_END - \
 						GENERATED_GBL_DATA_SIZE)
 
 /* Timer information. */
 #define CONFIG_SYS_PTV			2	/* Divisor: 2^(PTV+1) => 8 */
-#define CONFIG_SYS_HZ			1000	/* 1ms clock */
 
 /* I2C IP block */
 #define CONFIG_I2C
-#define CONFIG_HARD_I2C
-#define CONFIG_SYS_I2C_SPEED		100000
-#define CONFIG_SYS_I2C_SLAVE		1
-#define CONFIG_I2C_MULTI_BUS
-#define CONFIG_DRIVER_OMAP24XX_I2C
 #define CONFIG_CMD_I2C
+#define CONFIG_SYS_I2C
+#define CONFIG_SYS_OMAP24_I2C_SPEED	100000
+#define CONFIG_SYS_OMAP24_I2C_SLAVE	1
+#define CONFIG_SYS_I2C_OMAP24XX
 
 /* MMC/SD IP block */
 #define CONFIG_MMC
@@ -88,7 +111,9 @@
  */
 #ifdef CONFIG_NAND
 #define CONFIG_NAND_OMAP_GPMC
+#ifndef CONFIG_SYS_NAND_BASE
 #define CONFIG_SYS_NAND_BASE		0x8000000
+#endif
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define CONFIG_CMD_NAND
 #endif
@@ -102,7 +127,7 @@
  * we are on so we do not need to rely on the command prompt.  We set a
  * console baudrate of 115200 and use the default baud rate table.
  */
-#define CONFIG_SYS_MALLOC_LEN		(1024 << 10)
+#define CONFIG_SYS_MALLOC_LEN		(16 << 20)
 #define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_SYS_PROMPT		"U-Boot# "
 #define CONFIG_SYS_CONSOLE_INFO_QUIET
@@ -171,7 +196,8 @@
  * under common/spl/.  Given our generally common memory map, we set a
  * number of related defaults and sizes here.
  */
-#ifndef CONFIG_NOR_BOOT
+#if !defined(CONFIG_NOR_BOOT) && \
+	!(defined(CONFIG_QSPI_BOOT) && defined(CONFIG_AM43XX))
 #define CONFIG_SPL
 #define CONFIG_SPL_FRAMEWORK
 #define CONFIG_SPL_OS_BOOT
@@ -186,12 +212,18 @@
  * We have the SPL malloc pool at the end of the BSS area.
  */
 #define CONFIG_SPL_STACK		CONFIG_SYS_INIT_SP_ADDR
+#ifndef CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_TEXT_BASE		0x80800000
+#endif
+#ifndef CONFIG_SPL_BSS_START_ADDR
 #define CONFIG_SPL_BSS_START_ADDR	0x80a00000
 #define CONFIG_SPL_BSS_MAX_SIZE		0x80000		/* 512 KB */
+#endif
+#ifndef CONFIG_SYS_SPL_MALLOC_START
 #define CONFIG_SYS_SPL_MALLOC_START	(CONFIG_SPL_BSS_START_ADDR + \
 					 CONFIG_SPL_BSS_MAX_SIZE)
 #define CONFIG_SYS_SPL_MALLOC_SIZE	CONFIG_SYS_MALLOC_LEN
+#endif
 
 /* RAW SD card / eMMC locations. */
 #define CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR	0x300 /* address 0x60000 */
@@ -202,8 +234,6 @@
 #define CONFIG_SPL_FAT_LOAD_PAYLOAD_NAME	"u-boot.img"
 
 #ifdef CONFIG_SPL_OS_BOOT
-#define CONFIG_SYS_SPL_ARGS_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x100)
-
 /* FAT */
 #define CONFIG_SPL_FAT_LOAD_KERNEL_NAME		"uImage"
 #define CONFIG_SPL_FAT_LOAD_ARGS_NAME		"args"
@@ -239,11 +269,11 @@
 #define CONFIG_SPL_BOARD_INIT
 
 #ifdef CONFIG_NAND
-#define CONFIG_SPL_NAND_AM33XX_BCH	/* OMAP4 and later ELM support */
 #define CONFIG_SPL_NAND_SUPPORT
 #define CONFIG_SPL_NAND_BASE
 #define CONFIG_SPL_NAND_DRIVERS
 #define CONFIG_SPL_NAND_ECC
+#define CONFIG_SPL_MTD_SUPPORT
 #define CONFIG_SYS_NAND_U_BOOT_START	CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x80000
 #endif

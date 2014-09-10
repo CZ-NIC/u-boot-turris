@@ -16,8 +16,7 @@
  * (easy to change)
  */
 
-#define CONFIG_MPC5xxx		1	/* This is an MPC5xxx CPU		*/
-#define CONFIG_MPC5200		1	/* (more precisely an MPC5200 CPU)	*/
+#define CONFIG_MPC5200		1	/* This is an MPC5200 CPU		*/
 #define CONFIG_TQM5200		1	/* ... on TQM5200 module		*/
 #undef CONFIG_TQM5200_REV100		/*  define for revision 100 modules	*/
 
@@ -605,7 +604,6 @@
  * Miscellaneous configurable options
  */
 #define CONFIG_SYS_LONGHELP			/* undef to save memory	    */
-#define CONFIG_SYS_PROMPT		"=> "	/* Monitor Command Prompt   */
 
 #define CONFIG_CMDLINE_EDITING	1	/* add command line history	*/
 #define	CONFIG_SYS_HUSH_PARSER		1	/* use "hush" command parser	*/
@@ -631,8 +629,6 @@
 #define CONFIG_SYS_MEMTEST_END		0x00f00000	/* 1 ... 15 MB in DRAM	*/
 
 #define CONFIG_SYS_LOAD_ADDR		0x100000	/* default load address */
-
-#define CONFIG_SYS_HZ			1000	/* decrementer freq: 1 ms ticks */
 
 /*
  * Enable loopw command.
