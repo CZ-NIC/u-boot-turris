@@ -54,7 +54,7 @@ int get_mac(uint8_t *tmp_mac, uint8_t *buffer) {
         i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 
         // Wake up
-        i2c_write(I2C_ATSHA204, 0, 0, 0, 1);
+        i2c_write(I2C_ATSHA204, 0, 0, NULL, 1);
         udelay(ATSHA204_I2C_TIMEOUT);
 
         i2c_read(I2C_ATSHA204, 0, 0, buffer, BUFFSIZE_NI2C);
