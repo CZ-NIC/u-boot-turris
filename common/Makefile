@@ -29,6 +29,7 @@ COBJS-y += cmd_boot.o
 COBJS-$(CONFIG_CMD_BOOTM) += cmd_bootm.o
 COBJS-y += cmd_help.o
 COBJS-y += cmd_version.o
+COBJS-y += cmd_atsha204_mac_read.o
 
 # environment
 COBJS-y += env_attr.o
