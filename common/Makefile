@@ -43,6 +43,7 @@ obj-y += cmd_boot.o
 obj-$(CONFIG_CMD_BOOTM) += cmd_bootm.o bootm.o bootm_os.o
 obj-y += cmd_help.o
 obj-y += cmd_version.o
+obj-y += cmd_atsha204_mac_read.o
 
 # environment
 obj-y += env_attr.o
