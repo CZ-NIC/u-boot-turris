@@ -8,6 +8,7 @@
 #include <common.h>
 #include <command.h>
 #include <i2c.h>
+#include <atsha204_mac_read.h>
 
 #define I2C_ATSHA204 0x64
 #define BUFFSIZE_NI2C 64
@@ -90,7 +91,7 @@ int get_mac(uint8_t *tmp_mac, uint8_t *buffer) {
        
 }
 
-static int do_atsha204_mac_read(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+void atsha204_mac_read()
 {
     int i,ret = -1, try = 1;
     unsigned int mac_as_number = 0, mac_as_number_orig = 0;
@@ -130,7 +131,11 @@ static int do_atsha204_mac_read(cmd_tbl_t *cmdtp, int flag, int argc, char * con
                 printf("MAC%i %s\n", i, mac);
                 setenv(varname, mac);
     }
+}
 
+static int do_atsha204_mac_read(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+    atsha204_mac_read();
     return 0;
 }
     
