@@ -158,6 +158,16 @@
 #define CONFIG_SYS_L2_SIZE	(512 << 10)
 #define CONFIG_SYS_HUSH_PARSER
 #define CONFIG_AUTO_COMPLETE
+
+#define CONFIG_CMD_JFFS2
+#define CONFIG_CMD_UBI
+#define CONFIG_CMD_UBIFS
+#define CONFIG_RBTREE
+#define CONFIG_MTD_DEVICE               /* needed for mtdparts commands */
+#define CONFIG_MTD_PARTITIONS
+#define CONFIG_CMD_MTDPARTS
+#define CONFIG_LZO
+
 #endif
 
 
@@ -259,13 +269,15 @@
 #define CONFIG_FSL_LAW
 #define CONFIG_TSEC_ENET	/* tsec ethernet support */
 #define CONFIG_ENV_OVERWRITE
-
+/*
+#ifndef CONFIG_TURRIS1
 #define CONFIG_CMD_SATA
 #define CONFIG_SATA_SIL
 #define CONFIG_SYS_SATA_MAX_DEVICE	2
 #define CONFIG_LIBATA
 #define CONFIG_LBA48
-
+#endif
+*/
 #if defined(CONFIG_P2020RDB) || defined(CONFIG_TURRIS1)
 #define CONFIG_SYS_CLK_FREQ	100000000
 #else
@@ -615,10 +627,13 @@
  * I2C2 EEPROM
  */
 #undef CONFIG_ID_EEPROM
-
+/*
+#ifndef CONFIG_TURRIS1
 #define CONFIG_RTC_PT7C4338
 #define CONFIG_SYS_I2C_RTC_ADDR		0x68
+#endif*/
 #define CONFIG_SYS_I2C_PCA9557_ADDR	0x18
+
 
 /* enable read and write access to EEPROM */
 #define CONFIG_CMD_EEPROM
@@ -706,12 +721,12 @@
 #define CONFIG_SYS_PCIE1_IO_SIZE	0x00010000	/* 64k */
 
 #define CONFIG_PCI_PNP	/* do pci plug-and-play */
-#define CONFIG_E1000	/* Defind e1000 pci Ethernet card*/
+/*#define CONFIG_E1000*/	/* Defind e1000 pci Ethernet card*/
 #define CONFIG_CMD_PCI
 #define CONFIG_CMD_NET
 
 #define CONFIG_PCI_SCAN_SHOW	/* show pci devices on startup */
-#define CONFIG_DOS_PARTITION
+/* #define CONFIG_DOS_PARTITION*/
 #endif /* CONFIG_PCI */
 
 #if defined(CONFIG_TSEC_ENET)
@@ -842,14 +857,29 @@
  */
 #include <config_cmd_default.h>
 
+#undef CONFIG_CMD_LOADB        /* loadb                        */
+#undef CONFIG_CMD_LOADS        /* loads                        */
+#define CONFIG_CMD_MEMORY       /* md mm nm mw cp cmp crc base loop */
+#define CONFIG_CMD_MISC         /* Misc functions like sleep etc*/
+#define CONFIG_CMD_NET          /* bootp, tftpboot, rarpboot    */
+#undef CONFIG_CMD_NFS          /* NFS support                  */
+#define CONFIG_CMD_RUN          /* run command in env variable  */
+#define CONFIG_CMD_SAVEENV      /* saveenv                      */
+#undef CONFIG_CMD_SETGETDCR    /* DCR support on 4xx           */
+#undef CONFIG_CMD_SOURCE       /* "source" command support     */
+#undef CONFIG_CMD_XIMG         /* Load part of Multi Image     */
+/*
+#ifndef CONFIG_TURRIS1
 #define CONFIG_CMD_IRQ
-#define CONFIG_CMD_PING
-#define CONFIG_CMD_I2C
 #define CONFIG_CMD_MII
 #define CONFIG_CMD_DATE
 #define CONFIG_CMD_ELF
-#define CONFIG_CMD_SETEXPR
 #define CONFIG_CMD_REGINFO
+#endif
+*/
+#define CONFIG_CMD_PING
+#define CONFIG_CMD_I2C
+#define CONFIG_CMD_SETEXPR
 
 /*
  * USB
@@ -863,7 +893,7 @@
 #define CONFIG_CMD_USB
 #define CONFIG_EHCI_HCD_INIT_AFTER_RESET
 #define CONFIG_USB_EHCI_FSL
-#define CONFIG_USB_STORAGE
+#undef CONFIG_USB_STORAGE
 #endif
 #endif
 
@@ -875,14 +905,14 @@
 #define CONFIG_CMD_MMC
 #define CONFIG_GENERIC_MMC
 #endif
-
+/*
 #if defined(CONFIG_MMC) || defined(CONFIG_USB_EHCI) \
 		 || defined(CONFIG_FSL_SATA)
 #define CONFIG_CMD_EXT2
 #define CONFIG_CMD_FAT
 #define CONFIG_DOS_PARTITION
 #endif
-
+*/
 #undef CONFIG_WATCHDOG	/* watchdog disabled */
 
 /*
