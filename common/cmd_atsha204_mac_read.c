@@ -12,9 +12,9 @@
 
 #define I2C_ATSHA204 0x64
 #define BUFFSIZE_NI2C 64
-#define ATSHA204_I2C_TIMEOUT 150000
+#define ATSHA204_I2C_TIMEOUT 180000
 #define POLYNOM 0x8005
-#define CONFIG_SYS_I2C_SPEED 132000
+#define CONFIG_SYS_I2C_SPEED 128000
 #define ATSHA204_STATUS_WAKE_OK 0x11
 
 unsigned char cmd_prefix[] =      { 0x03, 0x07, 0x02, 0x01, 0x03, 0x00, 0x12, 0xA7 };
@@ -53,6 +53,7 @@ bool check_crc(unsigned char length, unsigned char *data, unsigned char *crc) {
 int get_mac(uint8_t *tmp_mac, uint8_t *buffer) {
                 
         i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
+        udelay(50000);
 
         // Wake up
         i2c_write(I2C_ATSHA204, 0, 0, NULL, 1);
