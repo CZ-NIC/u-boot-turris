@@ -1015,10 +1015,14 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 "ramdisk_size=120000\0"	\
 "map_lowernorbank=i2c dev 1; i2c mw 18 1 02 1; i2c mw 18 3 fd 1\0" \
 "map_uppernorbank=i2c dev 1; i2c mw 18 1 00 1; i2c mw 18 3 fd 1\0" \
+"bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=6,2048 rw console=ttyS0,115200\0" \
 "bootargsnand=root=/dev/mtdblock8 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "norboot=setenv bootargs $bootargsnor; bootm 0xef020000 - 0xef000000\0" \
 "nandboot=setenv bootargs $bootargsnand; nand read 0x400000 0x0 0x00100000; nboot 0x200000 0 0x00200000; bootm 0x200000 - 0x400000\0" \
+"ubiboot=setenv bootargs $bootargsubi; ubi part rootfs; ubifsmount ubi0:rootfs; ubifsload 0x400000 /boot/fdt; ubifsload 0x200000 /boot/zImage; bootm 0x200000 - 0x400000\0" \
+"mtdids=nand0=nand\0" \
+"mtdparts=mtdparts=nand:-(rootfs)\0" \
 "reflash_timeout=40\0"
 #define CONFIG_TURRIS_BOOT "setexpr.b reflash *0xFFA0001F; if test $reflash -ge $reflash_timeout; then echo BOOT NOR; run norboot; else echo BOOT NAND; run nandboot; fi"
 #else
