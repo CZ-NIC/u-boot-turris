@@ -71,6 +71,10 @@
 #include <miiphy.h>
 #endif
 
+#ifdef CONFIG_CMD_ATSHA204_MAC_READ
+#include <atsha204_mac_read.h>
+#endif
+
 #ifdef CONFIG_SYS_UPDATE_FLASH_SIZE
 extern int update_flash_size(int flash_size);
 #endif
@@ -908,6 +912,12 @@ void board_init_r(gd_t *id, ulong dest_addr)
 	WATCHDOG_RESET();
 	puts("DOC:   ");
 	doc_init();
+#endif
+
+#if defined(CONFIG_CMD_ATSHA204_MAC_READ)
+        WATCHDOG_RESET();
+        puts("MAC Addresses:  \n");
+        atsha204_mac_read();
 #endif
 
 #ifdef CONFIG_BITBANGMII
