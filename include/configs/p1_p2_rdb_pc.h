@@ -1016,7 +1016,7 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 "ramdisk_size=120000\0"	\
 "map_lowernorbank=i2c dev 1; i2c mw 18 1 02 1; i2c mw 18 3 fd 1\0" \
 "map_uppernorbank=i2c dev 1; i2c mw 18 1 00 1; i2c mw 18 3 fd 1\0" \
-"bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=6,2048 rw console=ttyS0,115200\0" \
+"bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=6,2048 rootflags=chk_data_crc rw console=ttyS0,115200\0" \
 "bootargsnand=root=/dev/mtdblock8 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "norboot=setenv bootargs $bootargsnor; bootm 0xef020000 - 0xef000000\0" \
