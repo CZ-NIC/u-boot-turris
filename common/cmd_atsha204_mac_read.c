@@ -50,14 +50,14 @@ bool check_crc(unsigned char length, unsigned char *data, unsigned char *crc) {
         return true;
 }
 
-int get_mac(uint8_t *tmp_mac, uint8_t *buffer) {
+int get_mac(uint8_t *tmp_mac, uint8_t *buffer, unsigned long delay) {
                 
         i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
-        udelay(50000);
+        udelay(delay);
 
         // Wake up
         i2c_write(I2C_ATSHA204, 0, 0, NULL, 1);
-        udelay(ATSHA204_I2C_TIMEOUT);
+        udelay(delay);
 
         i2c_read(I2C_ATSHA204, 0, 0, buffer, BUFFSIZE_NI2C);
         if (!check_crc(buffer[0] - 2, buffer, (buffer + buffer[0] - 2))) {
@@ -68,7 +68,7 @@ int get_mac(uint8_t *tmp_mac, uint8_t *buffer) {
 
         // Read MAC prefix 
         i2c_write(I2C_ATSHA204, 0, 0, cmd_prefix, 8);
-        udelay(ATSHA204_I2C_TIMEOUT);
+        udelay(delay);
 
         i2c_read(I2C_ATSHA204, 0, 0, buffer, BUFFSIZE_NI2C);
         if (!check_crc(buffer[0] - 2, buffer, (buffer + buffer[0] - 2))){
@@ -80,7 +80,7 @@ int get_mac(uint8_t *tmp_mac, uint8_t *buffer) {
 
         // Read MAC suffix
         i2c_write(I2C_ATSHA204, 0, 0, cmd_mac, 8);
-        udelay(ATSHA204_I2C_TIMEOUT);
+        udelay(delay);
 
         i2c_read(I2C_ATSHA204, 0, 0, buffer, BUFFSIZE_NI2C);
         if (!check_crc(buffer[0] - 2, buffer, (buffer + buffer[0] - 2))) {
@@ -97,19 +97,23 @@ void atsha204_mac_read()
     int i,ret = -1, try = 1;
     unsigned int mac_as_number = 0, mac_as_number_orig = 0;
     unsigned char tmp_mac[6];
+    unsigned long delay;
     char mac[20], varname[10];
     uint8_t buffer[BUFFSIZE_NI2C];
     memset(buffer, 0, BUFFSIZE_NI2C);
 
-    while(ret != 0 && try <= 3) {
+    while(ret != 0 && try <= 5) {
+        delay = ATSHA204_I2C_TIMEOUT * try;
+
         if(try > 1) {
-            printf("try: %i\n", try);
-            udelay(ATSHA204_I2C_TIMEOUT);
+            printf("try: %i delay: %lu\n", try, delay);
+            udelay(delay);
         }
     
-        ret = get_mac(tmp_mac, buffer);
+        ret = get_mac(tmp_mac, buffer, delay);
         try++;
     }
+
     if(ret != 0){
         printf("Error\n");
         return 1;
