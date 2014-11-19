@@ -1113,7 +1113,7 @@ __stringify(__PCIE_RST_CMD)"\0"
 
 #ifdef CONFIG_TURRIS1
 #ifdef CONFIG_SDCARD
-#define CONFIG_BOOTCOMMAND	"mmc read 0x1000000 0x800 0x8000; protect off all; erase all; cp.b 0x1000000 0xef000000 0x1000000"
+#define CONFIG_BOOTCOMMAND	"mmc read 0x1000000 0x800 0x8000 && protect off all && erase all && cp.b 0x1000000 0xef000000 0x1000000 && echo HOTOVO"
 #else
 #define CONFIG_BOOTCOMMAND	CONFIG_TURRIS_BOOT
 #endif
