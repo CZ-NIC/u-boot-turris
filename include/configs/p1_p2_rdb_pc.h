@@ -160,6 +160,7 @@
 #define CONFIG_AUTO_COMPLETE
 #define CONFIG_CMD_ATSHA204_MAC_READ
 
+#define CONFIG_CMD_DHCP
 #define CONFIG_CMD_JFFS2
 #define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
@@ -994,7 +995,6 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 "netdev=eth0\0"	\
 "uboot=" __stringify(CONFIG_UBOOTPATH) "\0"	\
 "loadaddr=1000000\0"	\
-"bootfile=uImage\0"	\
 "tftpflash=tftpboot $loadaddr $uboot; "	\
 	"protect off " __stringify(CONFIG_SYS_TEXT_BASE) " +$filesize; " \
 	"erase " __stringify(CONFIG_SYS_TEXT_BASE) " +$filesize; "	\
@@ -1003,25 +1003,18 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 	"cmp.b $loadaddr " __stringify(CONFIG_SYS_TEXT_BASE) " $filesize\0" \
 "hwconfig=usb1:dr_mode=host,phy_type=ulpi\0"    \
 "consoledev=ttyS0\0"	\
-"ramdiskaddr=2000000\0"	\
-"ramdiskfile=rootfs.ext2.gz.uboot\0"	\
 "fdtaddr=c00000\0"	\
-"bdev=sda1\0" \
 "jffs2nor=mtdblock3\0"	\
 "norbootaddr=ef080000\0"	\
 "norfdtaddr=ef040000\0"	\
-"jffs2nand=mtdblock9\0"	\
-"nandbootaddr=100000\0"	\
-"nandfdtaddr=80000\0"		\
-"ramdisk_size=120000\0"	\
-"map_lowernorbank=i2c dev 1; i2c mw 18 1 02 1; i2c mw 18 3 fd 1\0" \
-"map_uppernorbank=i2c dev 1; i2c mw 18 1 00 1; i2c mw 18 3 fd 1\0" \
-"bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=6,2048 rootflags=chk_data_crc rw console=ttyS0,115200\0" \
+"nandbootaddr=1100000\0"	\
+"nandfdtaddr=1000000\0"		\
+"bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=9,2048 rootflags=chk_data_crc rw console=ttyS0,115200\0" \
 "bootargsnand=root=/dev/mtdblock8 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "norboot=setenv bootargs $bootargsnor; bootm 0xef020000 - 0xef000000\0" \
-"nandboot=setenv bootargs $bootargsnand; nand read 0x400000 0x0 0x00100000; nboot 0x200000 0 0x00200000; bootm 0x200000 - 0x400000\0" \
-"ubiboot=setenv bootargs $bootargsubi; ubi part rootfs; ubifsmount ubi0:rootfs; ubifsload 0x400000 /boot/fdt; ubifsload 0x200000 /boot/zImage; bootm 0x200000 - 0x400000\0" \
+"nandboot=setenv bootargs $bootargsnand; nand read $nandfdtaddr 0x0 0x00100000; nboot $nandbootaddr 0 0x00200000; bootm $nandbootaddr - $nandfdtaddr\0" \
+"ubiboot=setenv bootargs $bootargsubi; ubi part rootfs; ubifsmount ubi0:rootfs; ubifsload $nandfdtaddr /boot/fdt; ubifsload $nandbootaddr /boot/zImage; bootm $nandbootaddr - $nandfdtaddr\0" \
 "mtdids=nand0=nand\0" \
 "mtdparts=mtdparts=nand:-(rootfs)\0" \
 "reflash_timeout=40\0"
