@@ -191,6 +191,45 @@
 #endif
 #endif
 
+#ifdef CONFIG_TURRIS
+#define CONFIG_BOARDNAME "TURRIS"
+#define CONFIG_NAND_FSL_ELBC
+#define CONFIG_P2020
+#define CONFIG_SPI_FLASH
+#define __SW_BOOT_MASK		0x03
+#define __SW_BOOT_NOR		0xc8
+#define __SW_BOOT_SPI		0x28
+#define __SW_BOOT_SD		0x68 /* or 0x18 */
+#define __SW_BOOT_NAND		0xe8
+#define __SW_BOOT_PCIE		0xa8
+#define CONFIG_SYS_L2_SIZE	(512 << 10)
+/*
+ * Dynamic MTD Partition support with mtdparts
+ */
+#define CONFIG_MTD_DEVICE
+#define CONFIG_MTD_PARTITIONS
+#define CONFIG_CMD_MTDPARTS
+#define CONFIG_FLASH_CFI_MTD
+#ifdef CONFIG_PHYS_64BIT
+#define MTDIDS_DEFAULT "nor0=fef000000.nor"
+#define MTDPARTS_DEFAULT "mtdparts=fef000000.nor:128k(dtb-image)," \
+			"1664k(kernel),1536k(root),11264k(backup)," \
+			"128k(cert),1024k(u-boot)"
+#else
+#define MTDIDS_DEFAULT "nor0=ef000000.nor"
+#define MTDPARTS_DEFAULT "mtdparts=ef000000.nor:128k(dtb-image)," \
+			"1664k(kernel),1536k(root),11264k(backup)," \
+			"128k(cert),1024k(u-boot)"
+#endif
+
+#define CONFIG_CMD_UBI
+#define CONFIG_CMD_UBIFS
+#define CONFIG_RBTREE
+#define CONFIG_LZO
+
+#endif
+
+
 #ifdef CONFIG_SDCARD
 #define CONFIG_SPL_MPC8XXX_INIT_DDR_SUPPORT
 #define CONFIG_SPL_ENV_SUPPORT
@@ -330,7 +369,7 @@
 #define CONFIG_LIBATA
 #define CONFIG_LBA48
 
-#if defined(CONFIG_P2020RDB)
+#if defined(CONFIG_P2020RDB) || defined(CONFIG_TURRIS)
 #define CONFIG_SYS_CLK_FREQ	100000000
 #else
 #define CONFIG_SYS_CLK_FREQ	66666666
@@ -370,11 +409,19 @@
 #define CONFIG_SYS_FSL_DDR3
 #define CONFIG_SYS_DDR_RAW_TIMING
 #define CONFIG_DDR_SPD
+#ifdef CONFIG_TURRIS
+#define CONFIG_SYS_SPD_BUS_NUM 2
+#define CONFIG_FSL_DDR_INTERACTIVE
+#else
 #define CONFIG_SYS_SPD_BUS_NUM 1
+#endif
 #define SPD_EEPROM_ADDRESS 0x52
+#ifndef CONFIG_TURRIS
 #undef CONFIG_FSL_DDR_INTERACTIVE
+#endif
 
-#if (defined(CONFIG_P1020MBG) || defined(CONFIG_P1020RDB_PD))
+#if (defined(CONFIG_P1020MBG) || defined(CONFIG_P1020RDB_PD) || \
+defined(CONFIG_TURRIS))
 #define CONFIG_SYS_SDRAM_SIZE_LAW	LAW_SIZE_2G
 #define CONFIG_CHIP_SELECTS_PER_CTRL	2
 #else
@@ -389,7 +436,7 @@
 #define CONFIG_DIMM_SLOTS_PER_CTLR	1
 
 /* Default settings for DDR3 */
-#ifndef CONFIG_P2020RDB
+#if !(defined(CONFIG_P2020RDB) || defined(CONFIG_TURRIS))
 #define CONFIG_SYS_DDR_CS0_BNDS		0x0000003f
 #define CONFIG_SYS_DDR_CS0_CONFIG	0x80014302
 #define CONFIG_SYS_DDR_CS0_CONFIG_2	0x00000000
@@ -495,18 +542,29 @@
 #define CONFIG_SYS_NAND_BASE_LIST	{ CONFIG_SYS_NAND_BASE }
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
 #define CONFIG_CMD_NAND
-#if defined(CONFIG_P1020RDB_PD)
+#if defined(CONFIG_P1020RDB_PD) || defined(CONFIG_TURRIS)
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(128 * 1024)
 #else
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(16 * 1024)
 #endif
 
+#ifdef CONFIG_TURRIS
+#define CONFIG_SYS_NAND_BR_PRELIM (BR_PHYS_ADDR(CONFIG_SYS_NAND_BASE_PHYS) \
+	| BR_PS_8	/* Port Size = 8 bit */ \
+	| BR_MS_FCM	/* MSEL = FCM */ \
+	| BR_V)	/* valid */
+
+#define CONFIG_NAND_ECC_BCH
+#define CONFIG_BCH
+#define CONFIG_NAND_ECC_BCH_BYTES 7
+#else
 #define CONFIG_SYS_NAND_BR_PRELIM (BR_PHYS_ADDR(CONFIG_SYS_NAND_BASE_PHYS) \
 	| (2<<BR_DECC_SHIFT)	/* Use HW ECC */ \
 	| BR_PS_8	/* Port Size = 8 bit */ \
 	| BR_MS_FCM	/* MSEL = FCM */ \
 	| BR_V)	/* valid */
-#if defined(CONFIG_P1020RDB_PD)
+#endif
+#if defined(CONFIG_P1020RDB_PD) || defined(CONFIG_TURRIS)
 #define CONFIG_SYS_NAND_OR_PRELIM	(OR_AM_32KB \
 	| OR_FCM_PGS	/* Large Page*/ \
 	| OR_FCM_CSCT \
@@ -695,7 +753,11 @@
 #define CONFIG_SYS_FSL_I2C2_OFFSET	0x3100
 #define CONFIG_SYS_I2C_NOPROBES		{ {0, 0x29} }
 #define CONFIG_SYS_I2C_EEPROM_ADDR	0x52
+#ifdef CONFIG_TURRIS
+#define CONFIG_SYS_SPD_BUS_NUM		2
+#else
 #define CONFIG_SYS_SPD_BUS_NUM		1 /* For rom_loc and flash bank */
+#endif
 
 /*
  * I2C2 EEPROM
@@ -790,9 +852,15 @@
 #define CONFIG_TSEC3
 #define CONFIG_TSEC3_NAME	"eTSEC3"
 
+#ifdef CONFIG_TURRIS
+#define TSEC1_PHY_ADDR	0
+#define TSEC2_PHY_ADDR	5
+#define TSEC3_PHY_ADDR	7
+#else
 #define TSEC1_PHY_ADDR	2
 #define TSEC2_PHY_ADDR	0
 #define TSEC3_PHY_ADDR	1
+#endif
 
 #define TSEC1_FLAGS	(TSEC_GIGABIT | TSEC_REDUCED)
 #define TSEC2_FLAGS	(TSEC_GIGABIT | TSEC_REDUCED)

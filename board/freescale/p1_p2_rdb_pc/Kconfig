@@ -10,3 +10,18 @@ config SYS_CONFIG_NAME
 	default "p1_p2_rdb_pc"
 
 endif
+
+if TARGET_TURRIS
+
+config SYS_BOARD
+	default "p1_p2_rdb_pc"
+
+config SYS_VENDOR
+	default "freescale"
+
+config SYS_CONFIG_NAME
+	default "p1_p2_rdb_pc"
+
+endif
+
+

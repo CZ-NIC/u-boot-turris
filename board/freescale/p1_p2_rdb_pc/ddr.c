@@ -49,7 +49,7 @@ dimm_params_t ddr_raw_timing = {
 	.refresh_rate_ps = 7800000,
 	.tfaw_ps = 37500,
 };
-#elif defined(CONFIG_P2020RDB)
+#elif defined(CONFIG_P2020RDB) || defined(CONFIG_TURRIS)
 /* Micron MT41J128M16_15E */
 dimm_params_t ddr_raw_timing = {
 	.n_ranks = 1,

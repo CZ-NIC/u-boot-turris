@@ -9,6 +9,7 @@ P1_P2_RDB_PC represents a set of boards including
     P1024RDB
     P1025RDB
     P2020RDB-PC
+    Turris (CZ.NIC)
 
 They have similar design of P1020RDB but have DDR3 instead of DDR2. P2020RDB-PC
 has 64-bit DDR. All others have 32-bit DDR.

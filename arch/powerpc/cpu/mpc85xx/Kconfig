@@ -90,6 +90,11 @@ config TARGET_P1_P2_RDB_PC
 	select SUPPORT_SPL
 	select SUPPORT_TPL
 
+config TARGET_TURRIS
+	bool "Support Turris"
+	select SUPPORT_SPL
+	select SUPPORT_TPL
+
 config TARGET_P1_TWR
 	bool "Support p1_twr"
 
