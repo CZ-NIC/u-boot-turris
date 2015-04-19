@@ -461,7 +461,7 @@ int ft_board_setup(void *blob, bd_t *bd)
 		if (off < 0) {
 			printf("WARNING: could not find compatible node %s\n",
 			       soc_elbc_compat);
-			return off;
+			return 0;
 		}
 		err = fdt_del_node(blob, off);
 		if (err < 0) {
@@ -479,14 +479,14 @@ int ft_board_setup(void *blob, bd_t *bd)
 	if (usb1_off < 0) {
 		printf("WARNING: could not find compatible node %s\n",
 		       soc_usb_compat);
-		return usb1_off;
+		return 0;
 	}
 	usb2_off = fdt_node_offset_by_compatible(blob, usb1_off,
 			soc_usb_compat);
 	if (usb2_off < 0) {
 		printf("WARNING: could not find compatible node %s\n",
 		       soc_usb_compat);
-		return usb2_off;
+		return 0;
 	}
 	err = fdt_del_node(blob, usb2_off);
 	if (err < 0) {
