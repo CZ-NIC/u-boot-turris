@@ -727,6 +727,12 @@ static int fsl_elbc_chip_init(int devnum, u8 *addr)
 	} else {
 		/* otherwise fall back to software ECC */
 #if defined(CONFIG_NAND_ECC_BCH)
+		nand->ecc.size = 512;
+#ifdef CONFIG_NAND_ECC_BCH_BYTES
+		nand->ecc.bytes = CONFIG_NAND_ECC_BCH_BYTES;
+#else
+		nand->ecc.bytes = 7;
+#endif
 		nand->ecc.mode = NAND_ECC_SOFT_BCH;
 #else
 		nand->ecc.mode = NAND_ECC_SOFT;
