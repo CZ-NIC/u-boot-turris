@@ -354,6 +354,7 @@
 #define CONFIG_PCI
 #define CONFIG_PCIE1	/* PCIE controler 1 (slot 1) */
 #define CONFIG_PCIE2	/* PCIE controler 2 (slot 2) */
+#define CONFIG_PCIE3   /* PCIE controler 3 (slot 3) */
 #define CONFIG_FSL_PCI_INIT	/* Use common FSL init code */
 #define CONFIG_PCI_INDIRECT_BRIDGE	/* indirect PCI bridge support */
 #define CONFIG_FSL_PCIE_RESET	/* need PCIe reset errata */
@@ -794,12 +795,32 @@ defined(CONFIG_TURRIS))
  * Memory space is mapped 1-1, but I/O space must start from 0.
  */
 
+/* controller 3, tgtid 3, Base address 8000 */
+#define CONFIG_SYS_PCIE3_NAME          "PCIe SLOT"
+#define CONFIG_SYS_PCIE3_MEM_VIRT      0xc0000000
+#ifdef CONFIG_PHYS_64BIT
+#define CONFIG_SYS_PCIE3_MEM_BUS       0xc0000000
+#define CONFIG_SYS_PCIE3_MEM_PHYS      0xc20000000ull
+#else
+#define CONFIG_SYS_PCIE3_MEM_BUS       0xc0000000
+#define CONFIG_SYS_PCIE3_MEM_PHYS      0xc0000000
+#endif
+#define CONFIG_SYS_PCIE3_MEM_SIZE      0x20000000      /* 512M */
+#define CONFIG_SYS_PCIE3_IO_VIRT       0xffc20000
+#define CONFIG_SYS_PCIE3_IO_BUS        0x00000000
+#ifdef CONFIG_PHYS_64BIT
+#define CONFIG_SYS_PCIE3_IO_PHYS       0xfffc20000ull
+#else
+#define CONFIG_SYS_PCIE3_IO_PHYS       0xffc20000
+#endif
+#define CONFIG_SYS_PCIE3_IO_SIZE       0x00010000      /* 64k */
+
 /* controller 2, direct to uli, tgtid 2, Base address 9000 */
 #define CONFIG_SYS_PCIE2_NAME		"PCIe SLOT"
 #define CONFIG_SYS_PCIE2_MEM_VIRT	0xa0000000
 #ifdef CONFIG_PHYS_64BIT
-#define CONFIG_SYS_PCIE2_MEM_BUS	0xc0000000
-#define CONFIG_SYS_PCIE2_MEM_PHYS	0xc20000000ull
+#define CONFIG_SYS_PCIE2_MEM_BUS	0xa0000000
+#define CONFIG_SYS_PCIE2_MEM_PHYS	0xc10000000ull
 #else
 #define CONFIG_SYS_PCIE2_MEM_BUS	0xa0000000
 #define CONFIG_SYS_PCIE2_MEM_PHYS	0xa0000000
@@ -870,7 +891,11 @@ defined(CONFIG_TURRIS))
 #define TSEC2_PHYIDX	0
 #define TSEC3_PHYIDX	0
 
-#define CONFIG_ETHPRIME	"eTSEC1"
+#if defined(CONFIG_TURRIS)
+#define CONFIG_ETHPRIME	"eTSEC3"
+#else
+#define CONFIG_ETHPRIME "eTSEC1"
+#endif
 
 #define CONFIG_PHY_GIGE	1	/* Include GbE speed/duplex detection */
 
