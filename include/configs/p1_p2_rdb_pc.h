@@ -731,6 +731,8 @@ defined(CONFIG_TURRIS))
 
 /* Use the HUSH parser */
 #define CONFIG_SYS_HUSH_PARSER
+/* Enable command auto-completion */
+#define CONFIG_AUTO_COMPLETE
 
 /*
  * Pass open firmware flat tree
