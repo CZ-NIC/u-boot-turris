@@ -222,6 +222,7 @@
 			"128k(cert),1024k(u-boot)"
 #endif
 
+#define CONFIG_CMD_DHCP
 #define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
 #define CONFIG_RBTREE
