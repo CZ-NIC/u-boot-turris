@@ -222,6 +222,9 @@
 			"128k(cert),1024k(u-boot)"
 #endif
 
+/* Enable automatic setting of MACs */
+#define CONFIG_CMD_ATSHA204_MAC_READ
+
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_UBI
 #define CONFIG_CMD_UBIFS
