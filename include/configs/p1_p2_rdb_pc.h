@@ -211,15 +211,15 @@
 #define CONFIG_CMD_MTDPARTS
 #define CONFIG_FLASH_CFI_MTD
 #ifdef CONFIG_PHYS_64BIT
-#define MTDIDS_DEFAULT "nor0=fef000000.nor"
+#define MTDIDS_DEFAULT "nor0=fef000000.nor,nand0=nand"
 #define MTDPARTS_DEFAULT "mtdparts=fef000000.nor:128k(dtb-image)," \
 			"1664k(kernel),1536k(root),11264k(backup)," \
-			"128k(cert),1024k(u-boot)"
+			"128k(cert),1024k(u-boot);nand:-(rootfs)"
 #else
-#define MTDIDS_DEFAULT "nor0=ef000000.nor"
+#define MTDIDS_DEFAULT "nor0=ef000000.nor,nand0=nand"
 #define MTDPARTS_DEFAULT "mtdparts=ef000000.nor:128k(dtb-image)," \
 			"1664k(kernel),1536k(root),11264k(backup)," \
-			"128k(cert),1024k(u-boot)"
+			"128k(cert),1024k(u-boot);nand:-(rootfs)"
 #endif
 
 /* Enable automatic setting of MACs */
