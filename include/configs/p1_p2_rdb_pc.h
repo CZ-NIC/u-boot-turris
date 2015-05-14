@@ -1085,11 +1085,17 @@ defined(CONFIG_TURRIS))
 /* default location for tftp and bootm */
 #define CONFIG_LOADADDR	1000000
 
+#ifdef CONFIG_TURRIS
+#define CONFIG_BOOTDELAY 1     /* -1 disables auto-boot */
+#else
 #define CONFIG_BOOTDELAY 10	/* -1 disables auto-boot */
+#endif
+
 #define CONFIG_BOOTARGS	/* the boot command will set bootargs */
 
 #define CONFIG_BAUDRATE	115200
 
+#ifndef CONFIG_TURRIS
 #ifdef __SW_BOOT_NOR
 #define __NOR_RST_CMD	\
 norboot=i2c dev 1; i2c mw 18 1 __SW_BOOT_NOR 1; \
@@ -1115,6 +1121,18 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 pciboot=i2c dev 1; i2c mw 18 1 __SW_BOOT_PCIE 1; \
 i2c mw 18 3 __SW_BOOT_MASK 1; reset
 #endif
+#define CONFIG_NAND_BOOT_ADDR 100000
+#define CONFIG_NAND_FDT_ADDR 80000
+#else
+#define TURRIS_EXTRA_ENV \
+"bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
+"bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=9,2048 rootflags=chk_data_crc rw console=ttyS0,115200\0" \
+"norboot=setenv bootargs $bootargsnor; bootm 0xef020000 - 0xef000000\0" \
+"ubiboot=setenv bootargs $bootargsubi; ubi part rootfs; ubifsmount ubi0:rootfs; ubifsload $nandfdtaddr /boot/fdt; ubifsload $nandbootaddr /boot/zImage; bootm $nandbootaddr - $nandfdtaddr\0" \
+"reflash_timeout=40\0"
+#define CONFIG_NAND_BOOT_ADDR 2100000
+#define CONFIG_NAND_FDT_ADDR 2000000
+#endif
 
 #define	CONFIG_EXTRA_ENV_SETTINGS	\
 "netdev=eth0\0"	\
@@ -1137,11 +1155,14 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 "norbootaddr=ef080000\0"	\
 "norfdtaddr=ef040000\0"	\
 "jffs2nand=mtdblock9\0"	\
-"nandbootaddr=100000\0"	\
-"nandfdtaddr=80000\0"		\
+"nandbootaddr="__stringify(CONFIG_NAND_BOOT_ADDR)"\0"	\
+"nandfdtaddr="__stringify(CONFIG_NAND_FDT_ADDR)"\0"		\
 "ramdisk_size=120000\0"	\
 "map_lowernorbank=i2c dev 1; i2c mw 18 1 02 1; i2c mw 18 3 fd 1\0" \
 "map_uppernorbank=i2c dev 1; i2c mw 18 1 00 1; i2c mw 18 3 fd 1\0" \
+"mtdparts="MTDPARTS_DEFAULT"\0" \
+"mtdids="MTDIDS_DEFAULT"\0" \
+TURRIS_EXTRA_ENV"\0" \
 __stringify(__NOR_RST_CMD)"\0" \
 __stringify(__SPI_RST_CMD)"\0" \
 __stringify(__SD_RST_CMD)"\0" \
@@ -1199,6 +1220,14 @@ __stringify(__PCIE_RST_CMD)"\0"
 "tftp $fdtaddr $fdtfile;"	\
 "bootm $loadaddr $ramdiskaddr $fdtaddr"
 
+#define CONFIG_TURRIS_BOOT \
+"setexpr.b reflash *0xFFA0001F;" \
+"if test $reflash -ge $reflash_timeout; then echo BOOT NOR; run norboot; else echo BOOT NAND; run ubiboot; fi"
+
+#ifdef CONFIG_TURRIS
+#define CONFIG_BOOTCOMMAND      CONFIG_TURRIS_BOOT
+#else
 #define CONFIG_BOOTCOMMAND	CONFIG_HDBOOT
+#endif
 
 #endif /* __CONFIG_H */
