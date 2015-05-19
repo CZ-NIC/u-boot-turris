@@ -1007,8 +1007,8 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 "jffs2nor=mtdblock3\0"	\
 "norbootaddr=ef080000\0"	\
 "norfdtaddr=ef040000\0"	\
-"nandbootaddr=1100000\0"	\
-"nandfdtaddr=1000000\0"		\
+"nandbootaddr=2100000\0"	\
+"nandfdtaddr=2000000\0"		\
 "bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=9,2048 rootflags=chk_data_crc rw console=ttyS0,115200\0" \
 "bootargsnand=root=/dev/mtdblock8 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
