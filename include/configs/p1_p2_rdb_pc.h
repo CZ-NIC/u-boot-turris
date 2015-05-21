@@ -1007,13 +1007,13 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 "jffs2nor=mtdblock3\0"	\
 "norbootaddr=ef080000\0"	\
 "norfdtaddr=ef040000\0"	\
-"nandbootaddr=2100000\0"	\
+"nandbootaddr=2200000\0"	\
 "nandfdtaddr=2000000\0"		\
 "bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=9,2048 rootflags=chk_data_crc rw console=ttyS0,115200\0" \
 "bootargsnand=root=/dev/mtdblock8 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "norboot=setenv bootargs $bootargsnor; bootm 0xef020000 - 0xef000000\0" \
-"nandboot=setenv bootargs $bootargsnand; nand read $nandfdtaddr 0x0 0x00100000; nboot $nandbootaddr 0 0x00200000; bootm $nandbootaddr - $nandfdtaddr\0" \
+"nandboot=setenv bootargs $bootargsnand; nand read $nandfdtaddr 0x0 0x00200000; nboot $nandbootaddr 0 0x00200000; bootm $nandbootaddr - $nandfdtaddr\0" \
 "ubiboot=setenv bootargs $bootargsubi; ubi part rootfs; ubifsmount ubi0:rootfs; ubifsload $nandfdtaddr /boot/fdt; ubifsload $nandbootaddr /boot/zImage; bootm $nandbootaddr - $nandfdtaddr\0" \
 "mtdids=nand0=nand\0" \
 "mtdparts=mtdparts=nand:-(rootfs)\0" \
