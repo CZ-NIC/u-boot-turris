@@ -149,6 +149,13 @@ void fsl_ddr_get_spd(generic_spd_eeprom_t *ctrl_dimms_spd,
 	for (i = 0; i < dimm_slots_per_ctrl; i++) {
 		i2c_address = spd_i2c_addr[ctrl_num][i];
 		get_spd(&(ctrl_dimms_spd[i]), i2c_address);
+#ifdef CONFIG_TURRIS
+		while (ddr3_spd_check(&(ctrl_dimms_spd[i]))) {
+			printf("SPD check failed for DIMM slot %d."
+			" Running again.\n", i);
+			get_spd(&(ctrl_dimms_spd[i]), i2c_address);
+		}
+#endif
 	}
 }
 #else
