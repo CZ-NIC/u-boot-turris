@@ -553,22 +553,11 @@ defined(CONFIG_TURRIS))
 #define CONFIG_SYS_NAND_BLOCK_SIZE	(16 * 1024)
 #endif
 
-#ifdef CONFIG_TURRIS
-#define CONFIG_SYS_NAND_BR_PRELIM (BR_PHYS_ADDR(CONFIG_SYS_NAND_BASE_PHYS) \
-	| BR_PS_8	/* Port Size = 8 bit */ \
-	| BR_MS_FCM	/* MSEL = FCM */ \
-	| BR_V)	/* valid */
-
-#define CONFIG_NAND_ECC_BCH
-#define CONFIG_BCH
-#define CONFIG_NAND_ECC_BCH_BYTES 7
-#else
 #define CONFIG_SYS_NAND_BR_PRELIM (BR_PHYS_ADDR(CONFIG_SYS_NAND_BASE_PHYS) \
 	| (2<<BR_DECC_SHIFT)	/* Use HW ECC */ \
 	| BR_PS_8	/* Port Size = 8 bit */ \
 	| BR_MS_FCM	/* MSEL = FCM */ \
 	| BR_V)	/* valid */
-#endif
 #if defined(CONFIG_P1020RDB_PD) || defined(CONFIG_TURRIS)
 #define CONFIG_SYS_NAND_OR_PRELIM	(OR_AM_32KB \
 	| OR_FCM_PGS	/* Large Page*/ \
@@ -1127,10 +1116,12 @@ i2c mw 18 3 __SW_BOOT_MASK 1; reset
 #define TURRIS_EXTRA_ENV \
 "bootargsnor=root=/dev/mtdblock2 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "bootargsubi=root=ubi0:rootfs rootfstype=ubifs ubi.mtd=9,2048 rootflags=chk_data_crc rw console=ttyS0,115200\0" \
+"bootargsnand=root=/dev/mtdblock8 rw rootfstype=jffs2 console=ttyS0,115200\0" \
 "norboot=setenv bootargs $bootargsnor; bootm 0xef020000 - 0xef000000\0" \
 "ubiboot=setenv bootargs $bootargsubi; ubi part rootfs; ubifsmount ubi0:rootfs; ubifsload $nandfdtaddr /boot/fdt; ubifsload $nandbootaddr /boot/zImage; bootm $nandbootaddr - $nandfdtaddr\0" \
+"nandboot=setenv bootargs $bootargsnand; nand read $nandfdtaddr 0x0 0x00200000; nboot $nandbootaddr 0 0x00200000; bootm $nandbootaddr - $nandfdtaddr\0" \
 "reflash_timeout=40\0"
-#define CONFIG_NAND_BOOT_ADDR 2100000
+#define CONFIG_NAND_BOOT_ADDR 2200000
 #define CONFIG_NAND_FDT_ADDR 2000000
 #endif
 
@@ -1222,7 +1213,7 @@ __stringify(__PCIE_RST_CMD)"\0"
 
 #define CONFIG_TURRIS_BOOT \
 "setexpr.b reflash *0xFFA0001F;" \
-"if test $reflash -ge $reflash_timeout; then echo BOOT NOR; run norboot; else echo BOOT NAND; run ubiboot; fi"
+"if test $reflash -ge $reflash_timeout; then echo BOOT NOR; run norboot; else echo BOOT NAND; run nandboot; fi"
 
 #ifdef CONFIG_TURRIS
 #define CONFIG_BOOTCOMMAND      CONFIG_TURRIS_BOOT
