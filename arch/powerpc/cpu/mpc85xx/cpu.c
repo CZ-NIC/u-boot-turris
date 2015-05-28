@@ -23,6 +23,7 @@
 #include <post.h>
 #include <asm/processor.h>
 #include <fsl_ddr_sdram.h>
+#include <booke_watchdog.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -339,20 +340,49 @@ __weak unsigned long get_tbclk (void)
 
 #if defined(CONFIG_WATCHDOG)
 #define WATCHDOG_MASK (TCR_WP(63) | TCR_WRC(3) | TCR_WIE)
+#define WDTP(x)         ((((x)&0x3)<<30)|(((x)&0x3c)<<15))
+#define WDTP_MASK       (WDTP(0x3f))
+
+void
+booke_wdt_set(unsigned int timeout)
+{
+	u32 val;
+	val = mfspr(SPRN_TCR);
+	val &= ~WDTP_MASK;
+	val |= WDTP(timeout);
+
+	mtspr(SPRN_TCR, val);
+}
+
 void
 init_85xx_watchdog(void)
 {
-	mtspr(SPRN_TCR, (mfspr(SPRN_TCR) & ~WATCHDOG_MASK) |
-	      TCR_WP(CONFIG_WATCHDOG_PRESC) | TCR_WRC(CONFIG_WATCHDOG_RC));
+	booke_wdt_set(36);
+	WATCHDOG_RESET();
+
+	u32 val = mfspr(SPRN_TCR);
+	printf("wdt sprn_tcr %x\n", val);
+	val &= ~WDTP_MASK;
+	printf("wdt val %x mask %x\n", val, WDTP_MASK);
+	val |= (TCR_WIE | TCR_WRC(2) | WDTP(36));
+
+	printf("wdt wdt wdt %x\n", val);
+	mtspr(SPRN_TCR,val );
+
+	WATCHDOG_RESET();
 }
 
 void
 reset_85xx_watchdog(void)
 {
+#ifdef CONFIG_BOOKE
+	mtspr(SPRN_TSR, TSR_ENW | TSR_WIS);
+#else
 	/*
 	 * Clear TSR(WIS) bit by writing 1
 	 */
 	mtspr(SPRN_TSR, TSR_WIS);
+#endif
 }
 
 void

@@ -153,6 +153,7 @@ void fsl_ddr_get_spd(generic_spd_eeprom_t *ctrl_dimms_spd,
 		while (ddr3_spd_check(&(ctrl_dimms_spd[i]))) {
 			printf("SPD check failed for DIMM slot %d."
 			" Running again.\n", i);
+			udelay(500000);
 			get_spd(&(ctrl_dimms_spd[i]), i2c_address);
 		}
 #endif

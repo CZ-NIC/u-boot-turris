@@ -116,6 +116,10 @@ static int init_func_watchdog_init(void)
 	defined(CONFIG_IMX_WATCHDOG))
 	hw_watchdog_init();
 # endif
+
+#ifdef CONFIG_MPC85xx
+	init_85xx_watchdog();
+#endif
 	puts("       Watchdog enabled\n");
 	WATCHDOG_RESET();
 
