@@ -358,7 +358,8 @@ void
 init_85xx_watchdog(void)
 {
 	booke_wdt_set(36);
-	WATCHDOG_RESET();
+	//WATCHDOG_RESET();
+	mtspr(SPRN_TSR, TSR_ENW | TSR_WIS);
 
 	u32 val = mfspr(SPRN_TCR);
 	printf("wdt sprn_tcr %x\n", val);
@@ -369,7 +370,10 @@ init_85xx_watchdog(void)
 	printf("wdt wdt wdt %x\n", val);
 	mtspr(SPRN_TCR,val );
 
-	WATCHDOG_RESET();
+	mtspr(SPRN_TSR, TSR_ENW | TSR_WIS);
+	//WATCHDOG_RESET();
+	
+	init_max6370_watchdog();
 }
 
 void
