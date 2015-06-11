@@ -1,6 +1,5 @@
 #include <common.h>
 #include <watchdog.h>
-//#include <asm/gpio.h>
 #include <asm/mpc85xx_gpio.h>
 
 void hw_watchdog_reset(void)
