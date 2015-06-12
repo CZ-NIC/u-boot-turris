@@ -113,7 +113,7 @@ static int init_func_watchdog_init(void)
 # if defined(CONFIG_HW_WATCHDOG) && (defined(CONFIG_BLACKFIN) || \
 	defined(CONFIG_M68K) || defined(CONFIG_MICROBLAZE) || \
 	defined(CONFIG_SH) || defined(CONFIG_AT91SAM9_WATCHDOG) || \
-	defined(CONFIG_IMX_WATCHDOG))
+	defined(CONFIG_IMX_WATCHDOG)) || defined(CONFIG_TURRIS) 
 	hw_watchdog_init();
 # endif
 	puts("       Watchdog enabled\n");
@@ -902,13 +902,15 @@ static init_fnc_t init_sequence_f[] = {
 	checkcpu,
 #endif
 	print_cpuinfo,		/* display cpu info (and speed) */
+	INIT_FUNC_WATCHDOG_INIT
+	INIT_FUNC_WATCHDOG_RESET
 #if defined(CONFIG_MPC5xxx)
 	prt_mpc5xxx_clks,
 #endif /* CONFIG_MPC5xxx */
 #if defined(CONFIG_DISPLAY_BOARDINFO)
 	show_board_info,
 #endif
-	INIT_FUNC_WATCHDOG_INIT
+	INIT_FUNC_WATCHDOG_RESET
 #if defined(CONFIG_MISC_INIT_F)
 	misc_init_f,
 #endif

@@ -1035,6 +1035,9 @@ defined(CONFIG_TURRIS))
 
 #undef CONFIG_WATCHDOG	/* watchdog disabled */
 
+#define CONFIG_HW_WATCHDOG
+#define CONFIG_MAX6370_WATCHDOG
+
 /*
  * Miscellaneous configurable options
  */
