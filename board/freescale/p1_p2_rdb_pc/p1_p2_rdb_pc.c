@@ -220,26 +220,57 @@ int board_early_init_f(void)
 	return 0;
 }
 
+int read_boot_info(u8 *in, u8 *out, u8 *io_config)
+{
+	/* Initialize i2c early for rom_loc and flash bank information */
+	i2c_set_bus_num(CONFIG_SYS_SPD_BUS_NUM);
+
+	if (i2c_read(CONFIG_SYS_I2C_PCA9557_ADDR, 0, 1, in, 1) < 0 ||
+	    i2c_read(CONFIG_SYS_I2C_PCA9557_ADDR, 1, 1, out, 1) < 0 ||
+	    i2c_read(CONFIG_SYS_I2C_PCA9557_ADDR, 3, 1, io_config, 1) < 0) {
+		printf("Error reading i2c boot information!\n");
+#ifdef CONFIG_TURRIS
+		return 1; /* Don't want to hang() on this error */
+#else
+		return 0;
+#endif
+	}
+
+	return 0;
+}
+
 int checkboard(void)
 {
 	struct cpld_data *cpld_data = (void *)(CONFIG_SYS_CPLD_BASE);
 	ccsr_gur_t *gur = (void *)(CONFIG_SYS_MPC85xx_GUTS_ADDR);
 	u8 in, out, io_config, val;
+	int ret, try = 0;
 
 	printf("Board: %s CPLD: V%d.%d PCBA: V%d.0\n", CONFIG_BOARDNAME,
 		in_8(&cpld_data->cpld_rev_major) & 0x0F,
 		in_8(&cpld_data->cpld_rev_minor) & 0x0F,
 		in_8(&cpld_data->pcba_rev) & 0x0F);
 
-	/* Initialize i2c early for rom_loc and flash bank information */
-	i2c_set_bus_num(CONFIG_SYS_SPD_BUS_NUM);
-
-	if (i2c_read(CONFIG_SYS_I2C_PCA9557_ADDR, 0, 1, &in, 1) < 0 ||
-	    i2c_read(CONFIG_SYS_I2C_PCA9557_ADDR, 1, 1, &out, 1) < 0 ||
-	    i2c_read(CONFIG_SYS_I2C_PCA9557_ADDR, 3, 1, &io_config, 1) < 0) {
-		printf("Error reading i2c boot information!\n");
-		return 0; /* Don't want to hang() on this error */
+#ifdef CONFIG_TURRIS
+	ret = read_boot_info(&in, &out, &io_config);
+	while(ret && try++ < 3) {
+	    printf("Read boot info again\n");
+	    udelay(1000);
+	    ret = read_boot_info(&in, &out, &io_config);
 	}
+
+	if(ret != 0) {
+		printf("Using hardcoded values!\n");
+		in = 56;
+		out = 0;
+		io_config = 255;
+	}
+#else
+	read_boot_info(&in, &out, &io_config);
+#endif
+	printf("in: %u\n", in);
+	printf("out: %u\n", out);
+	printf("io_config: %u\n", io_config);
 
 	val = (in & io_config) | (out & (~io_config));
 
