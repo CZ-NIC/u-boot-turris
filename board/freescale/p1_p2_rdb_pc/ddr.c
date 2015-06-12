@@ -49,7 +49,7 @@ dimm_params_t ddr_raw_timing = {
 	.refresh_rate_ps = 7800000,
 	.tfaw_ps = 37500,
 };
-#elif defined(CONFIG_P2020RDB) || defined(CONFIG_TURRIS)
+#elif defined(CONFIG_P2020RDB)
 /* Micron MT41J128M16_15E */
 dimm_params_t ddr_raw_timing = {
 	.n_ranks = 1,
@@ -80,6 +80,41 @@ dimm_params_t ddr_raw_timing = {
 	.refresh_rate_ps = 7800000,
 	.tfaw_ps = 30000,
 };
+
+#elif defined(CONFIG_TURRIS)
+/* Kingston 9905594-003.A00G */
+dimm_params_t ddr_raw_timing = {
+	.n_ranks = 1,
+	.rank_density = 2147483648u,
+	.capacity = 2147483648u,
+	.primary_sdram_width = 32,
+	.ec_sdram_width = 0,
+	.registered_dimm = 0,
+	.mirrored_dimm = 0,
+	.n_row_addr = 15,
+	.n_col_addr = 10,
+	.n_banks_per_sdram_device = 8,
+	.edc_config = 0,
+	.burst_lengths_bitmask = 0x0c,
+
+	.tckmin_x_ps = 1500,
+	.caslat_x = 0x1e << 4,
+	.taa_ps = 13125,
+	.twr_ps = 15000,
+	.trcd_ps = 13500,
+	.trrd_ps = 7500,
+	.trp_ps = 13500,
+	.tras_ps = 36000,
+	.trc_ps = 49125,
+	.trfc_ps = 260000,
+	.twtr_ps = 7500,
+	.trtp_ps = 7500,
+	.refresh_rate_ps = 3900000,
+	.tfaw_ps = 30000,
+};
+
+
+
 #elif (defined(CONFIG_P1020MBG) || defined(CONFIG_P1020RDB_PD))
 /* Micron MT41J512M8_187E */
 dimm_params_t ddr_raw_timing = {
