@@ -1224,6 +1224,7 @@ __stringify(__PCIE_RST_CMD)"\0"
 "bootm $loadaddr $ramdiskaddr $fdtaddr"
 
 #define CONFIG_TURRIS_BOOT \
+"max6370_wdt_off;" \
 "setexpr.b reflash *0xFFA0001F;" \
 "if test $reflash -ge $reflash_timeout; then echo BOOT NOR; run norboot; else echo BOOT NAND; run ubiboot; fi"
 
