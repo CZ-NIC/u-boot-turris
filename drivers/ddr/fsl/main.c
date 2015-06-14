@@ -140,6 +140,7 @@ void fsl_ddr_get_spd(generic_spd_eeprom_t *ctrl_dimms_spd,
 {
 	unsigned int i;
 	unsigned int i2c_address = 0;
+	int try = 0;
 
 	if (ctrl_num >= CONFIG_NUM_DDR_CONTROLLERS) {
 		printf("%s unexpected ctrl_num = %u\n", __FUNCTION__, ctrl_num);
@@ -150,10 +151,11 @@ void fsl_ddr_get_spd(generic_spd_eeprom_t *ctrl_dimms_spd,
 		i2c_address = spd_i2c_addr[ctrl_num][i];
 		get_spd(&(ctrl_dimms_spd[i]), i2c_address);
 #ifdef CONFIG_TURRIS
-		while (ddr3_spd_check(&(ctrl_dimms_spd[i]))) {
+		while (ddr3_spd_check(&(ctrl_dimms_spd[i])) && try++ < 3) {
 			printf("SPD check failed for DIMM slot %d."
 			" Running again.\n", i);
 			get_spd(&(ctrl_dimms_spd[i]), i2c_address);
+			udelay(100000);
 		}
 #endif
 	}
