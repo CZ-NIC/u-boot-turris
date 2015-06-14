@@ -16,6 +16,7 @@
 #include <i2c.h>
 #include <fsl_ddr_sdram.h>
 #include <fsl_ddr.h>
+#include <watchdog.h>
 
 /*
  * CONFIG_SYS_FSL_DDR_SDRAM_BASE_PHY is the physical address from the view
@@ -154,6 +155,7 @@ void fsl_ddr_get_spd(generic_spd_eeprom_t *ctrl_dimms_spd,
 		while (ddr3_spd_check(&(ctrl_dimms_spd[i])) && try++ < 3) {
 			printf("SPD check failed for DIMM slot %d."
 			" Running again.\n", i);
+			WATCHDOG_RESET();
 			get_spd(&(ctrl_dimms_spd[i]), i2c_address);
 			udelay(100000);
 		}
