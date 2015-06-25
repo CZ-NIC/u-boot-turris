@@ -252,6 +252,9 @@ int checkboard(void)
 		in_8(&cpld_data->pcba_rev) & 0x0F);
 
 #ifdef CONFIG_TURRIS
+	// TODO: Ugly hack to set lower i2c speed on start up.
+	i2c_init(100000, 0);
+
 	ret = read_boot_info(&in, &out, &io_config);
 	while(ret && try++ < 3) {
 	    printf("Read boot info again\n");
