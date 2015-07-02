@@ -231,6 +231,9 @@ int checkboard(void)
 		in_8(&cpld_data->cpld_rev_minor) & 0x0F,
 		in_8(&cpld_data->pcba_rev) & 0x0F);
 
+        // TODO: Ugly hack to set lower i2c speed on start up.
+        i2c_init(100000, 0);
+
 	/* Initialize i2c early for rom_loc and flash bank information */
 	i2c_set_bus_num(CONFIG_SYS_SPD_BUS_NUM);
 
